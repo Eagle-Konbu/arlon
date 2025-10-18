@@ -1,0 +1,66 @@
+version: '3'
+
+vars:
+  PROJECT_NAME: arlon
+  BINARY_NAME: arlon
+  TARGET_DIR: target
+  RELEASE_DIR: "{{.TARGET_DIR}}/release"
+  DEBUG_DIR: "{{.TARGET_DIR}}/debug"
+
+tasks:
+  build:
+    desc: Build the project in debug mode
+    cmds:
+      - cargo build
+    sources:
+      - src/**/*.rs
+      - Cargo.toml
+      - Cargo.lock
+    generates:
+      - "{{.DEBUG_DIR}}/{{.BINARY_NAME}}"
+
+  build:release:
+    desc: Build the project in release mode (optimized)
+    cmds:
+      - cargo build --release
+    sources:
+      - src/**/*.rs
+      - Cargo.toml
+      - Cargo.lock
+    generates:
+      - "{{.RELEASE_DIR}}/{{.BINARY_NAME}}"
+
+  test:
+    desc: Run all tests
+    cmds:
+      - cargo test
+
+  check:
+    desc: Check the project for errors without building
+    cmds:
+      - cargo check
+
+  clippy:
+    desc: Run clippy (Rust linter)
+    cmds:
+      - cargo clippy -- -D warnings
+
+  fmt:
+    desc: Format the code using rustfmt
+    cmds:
+      - cargo fmt
+
+  fmt:check:
+    desc: Check if the code is formatted correctly
+    cmds:
+      - cargo fmt --check
+
+  clean:
+    desc: Remove build artifacts
+    cmds:
+      - cargo clean
+
+  install:
+    desc: Install the binary locally
+    cmds:
+      - cargo install --path .
