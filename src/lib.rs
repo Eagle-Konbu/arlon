@@ -1,3 +1,3 @@
-pub mod cli;
-pub mod git;
-pub mod output;
+pub mod domain;
+pub mod infra;
+pub mod service;

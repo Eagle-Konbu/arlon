@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 #[derive(Parser)]
 #[command(name = "arlon")]
 #[command(about = "Compare branches and files")]
-pub struct Cli {
+pub struct Args {
     #[command(subcommand)]
     pub command: Commands,
 }
