@@ -16,15 +16,15 @@ impl BranchName {
         if name.is_empty() {
             return Err(BranchNameError::Empty);
         }
-        
+
         // 基本的なブランチ名の検証（Git のルールに基づく）
         if name.contains("..") || name.starts_with('.') || name.ends_with('.') {
             return Err(BranchNameError::InvalidCharacters(name));
         }
-        
+
         Ok(Self(name))
     }
-    
+
     pub fn as_str(&self) -> &str {
         &self.0
     }

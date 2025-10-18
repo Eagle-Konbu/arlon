@@ -4,7 +4,7 @@ use std::process;
 
 fn main() {
     let args = Args::parse();
-    
+
     if let Err(e) = run(args) {
         eprintln!("Error: {}", e);
         process::exit(1);

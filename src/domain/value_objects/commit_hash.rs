@@ -16,19 +16,19 @@ impl CommitHash {
         if hash.is_empty() {
             return Err(CommitHashError::Empty);
         }
-        
+
         // Git ハッシュの基本的な検証（40文字の16進数）
         if hash.len() != 40 || !hash.chars().all(|c| c.is_ascii_hexdigit()) {
             return Err(CommitHashError::InvalidFormat(hash));
         }
-        
+
         Ok(Self(hash))
     }
-    
+
     pub fn as_str(&self) -> &str {
         &self.0
     }
-    
+
     pub fn short(&self) -> &str {
         &self.0[..7]
     }

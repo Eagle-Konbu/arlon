@@ -25,11 +25,11 @@ impl FileChange {
     pub fn new(path: FilePath, status: FileChangeStatus) -> Self {
         Self { path, status }
     }
-    
+
     pub fn path(&self) -> &FilePath {
         &self.path
     }
-    
+
     pub fn status(&self) -> &FileChangeStatus {
         &self.status
     }

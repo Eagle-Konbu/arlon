@@ -17,19 +17,19 @@ impl FilePath {
         if path.is_empty() {
             return Err(FilePathError::Empty);
         }
-        
+
         let path_buf = PathBuf::from(path);
         Ok(Self(path_buf))
     }
-    
+
     pub fn as_path(&self) -> &std::path::Path {
         &self.0
     }
-    
+
     pub fn as_str(&self) -> Option<&str> {
         self.0.to_str()
     }
-    
+
     pub fn to_string_lossy(&self) -> String {
         self.0.to_string_lossy().to_string()
     }

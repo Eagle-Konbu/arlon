@@ -10,7 +10,7 @@ impl OutputFormatter for JsonFormatter {
         println!("{}", json);
         Ok(())
     }
-    
+
     fn format_files(&self, files: &[FileDto]) -> Result<(), String> {
         let json = serde_json::to_string_pretty(files)
             .map_err(|e| format!("Failed to serialize files to JSON: {}", e))?;

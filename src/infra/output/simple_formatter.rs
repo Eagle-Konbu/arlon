@@ -10,7 +10,7 @@ impl OutputFormatter for SimpleFormatter {
         }
         Ok(())
     }
-    
+
     fn format_files(&self, files: &[FileDto]) -> Result<(), String> {
         for file in files {
             println!("{} {}", file.status, file.path);

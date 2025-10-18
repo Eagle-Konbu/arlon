@@ -15,8 +15,14 @@ pub enum GitRepositoryError {
 
 pub trait GitRepository {
     /// 指定されたブランチに存在しないコミットを取得する
-    fn get_commits_not_in_branch(&self, branch: &BranchName) -> Result<Vec<Commit>, GitRepositoryError>;
-    
+    fn get_commits_not_in_branch(
+        &self,
+        branch: &BranchName,
+    ) -> Result<Vec<Commit>, GitRepositoryError>;
+
     /// 指定されたブランチとの間でファイルの差分を取得する
-    fn get_file_changes_between_branches(&self, branch: &BranchName) -> Result<Vec<FileChange>, GitRepositoryError>;
+    fn get_file_changes_between_branches(
+        &self,
+        branch: &BranchName,
+    ) -> Result<Vec<FileChange>, GitRepositoryError>;
 }

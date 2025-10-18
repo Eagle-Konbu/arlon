@@ -1,5 +1,5 @@
 use crate::infra::cli::{Commands, OutputFormat};
-use crate::infra::output::{OutputFormatter, JsonFormatter, SimpleFormatter};
+use crate::infra::output::{JsonFormatter, OutputFormatter, SimpleFormatter};
 use crate::infra::repositories::Git2Repository;
 use crate::service::use_cases::{CompareCommitsUseCase, CompareFilesUseCase};
 
@@ -24,51 +24,63 @@ impl CommandController {
         let git_repository = Git2Repository::open_current_dir()?;
         Ok(Self { git_repository })
     }
-    
+
     pub fn execute(&self, command: Commands) -> Result<(), CommandError> {
         match command {
-            Commands::Commits { branch, format } => {
-                self.handle_compare_commits(branch, format)
-            }
-            Commands::Files { branch, format } => {
-                self.handle_compare_files(branch, format)
-            }
+            Commands::Commits { branch, format } => self.handle_compare_commits(branch, format),
+            Commands::Files { branch, format } => self.handle_compare_files(branch, format),
         }
     }
-    
-    fn handle_compare_commits(&self, branch: String, format: OutputFormat) -> Result<(), CommandError> {
+
+    fn handle_compare_commits(
+        &self,
+        branch: String,
+        format: OutputFormat,
+    ) -> Result<(), CommandError> {
         let use_case = CompareCommitsUseCase::new(&self.git_repository);
         let commits = use_case.execute(branch)?;
-        
+
         match format {
             OutputFormat::Simple => {
                 let formatter = SimpleFormatter;
-                formatter.format_commits(&commits).map_err(CommandError::OutputError)?;
+                formatter
+                    .format_commits(&commits)
+                    .map_err(CommandError::OutputError)?;
             }
             OutputFormat::Json => {
                 let formatter = JsonFormatter;
-                formatter.format_commits(&commits).map_err(CommandError::OutputError)?;
+                formatter
+                    .format_commits(&commits)
+                    .map_err(CommandError::OutputError)?;
             }
         }
-        
+
         Ok(())
     }
-    
-    fn handle_compare_files(&self, branch: String, format: OutputFormat) -> Result<(), CommandError> {
+
+    fn handle_compare_files(
+        &self,
+        branch: String,
+        format: OutputFormat,
+    ) -> Result<(), CommandError> {
         let use_case = CompareFilesUseCase::new(&self.git_repository);
         let files = use_case.execute(branch)?;
-        
+
         match format {
             OutputFormat::Simple => {
                 let formatter = SimpleFormatter;
-                formatter.format_files(&files).map_err(CommandError::OutputError)?;
+                formatter
+                    .format_files(&files)
+                    .map_err(CommandError::OutputError)?;
             }
             OutputFormat::Json => {
                 let formatter = JsonFormatter;
-                formatter.format_files(&files).map_err(CommandError::OutputError)?;
+                formatter
+                    .format_files(&files)
+                    .map_err(CommandError::OutputError)?;
             }
         }
-        
+
         Ok(())
     }
 }

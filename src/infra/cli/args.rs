@@ -13,15 +13,27 @@ pub enum Commands {
     Commits {
         #[arg(help = "Branch name to compare against")]
         branch: String,
-        
-        #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
+
+        #[arg(
+            short,
+            long,
+            value_enum,
+            default_value = "simple",
+            help = "Output format"
+        )]
         format: OutputFormat,
     },
     Files {
         #[arg(help = "Branch name to compare against")]
         branch: String,
-        
-        #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
+
+        #[arg(
+            short,
+            long,
+            value_enum,
+            default_value = "simple",
+            help = "Output format"
+        )]
         format: OutputFormat,
     },
 }
