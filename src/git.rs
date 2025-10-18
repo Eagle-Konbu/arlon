@@ -1,9 +1,6 @@
 use git2::{Repository, Oid};
 use std::collections::HashSet;
 
-#[cfg(test)]
-use mockall::automock;
-
 #[derive(Debug, Clone, PartialEq)]
 pub struct CommitInfo {
     pub hash: String,
@@ -19,37 +16,8 @@ pub struct FileInfo {
     pub status: String,
 }
 
-// Trait for Git operations - mockallが自動でモックを生成
-#[cfg_attr(test, automock)]
-pub trait GitOperations {
-    fn get_commits_not_in_branch(&self, branch_name: &str) -> Result<Vec<CommitInfo>, Box<dyn std::error::Error>>;
-    fn get_file_diff_between_branches(&self, branch_name: &str) -> Result<Vec<FileInfo>, Box<dyn std::error::Error>>;
-}
-
-// 実際の実装
-pub struct RealGitOperations;
-
-impl GitOperations for RealGitOperations {
-    fn get_commits_not_in_branch(&self, branch_name: &str) -> Result<Vec<CommitInfo>, Box<dyn std::error::Error>> {
-        get_commits_not_in_branch_impl(".", branch_name)
-    }
-
-    fn get_file_diff_between_branches(&self, branch_name: &str) -> Result<Vec<FileInfo>, Box<dyn std::error::Error>> {
-        get_file_diff_between_branches_impl(".", branch_name)
-    }
-}
-
-// 既存の関数は後方互換性のために保持
 pub fn get_commits_not_in_branch(branch_name: &str) -> Result<Vec<CommitInfo>, Box<dyn std::error::Error>> {
-    get_commits_not_in_branch_impl(".", branch_name)
-}
-
-pub fn get_file_diff_between_branches(branch_name: &str) -> Result<Vec<FileInfo>, Box<dyn std::error::Error>> {
-    get_file_diff_between_branches_impl(".", branch_name)
-}
-
-fn get_commits_not_in_branch_impl(repo_path: &str, branch_name: &str) -> Result<Vec<CommitInfo>, Box<dyn std::error::Error>> {
-    let repo = Repository::open(repo_path)?;
+    let repo = Repository::open(".")?;
     
     let head = repo.head()?;
     let head_commit = head.peel_to_commit()?;
@@ -85,20 +53,8 @@ fn get_commits_not_in_branch_impl(repo_path: &str, branch_name: &str) -> Result<
     Ok(commit_infos)
 }
 
-fn get_all_commits(repo: &Repository, start_oid: Oid) -> Result<HashSet<Oid>, git2::Error> {
-    let mut commits = HashSet::new();
-    let mut revwalk = repo.revwalk()?;
-    revwalk.push(start_oid)?;
-    
-    for oid in revwalk {
-        commits.insert(oid?);
-    }
-    
-    Ok(commits)
-}
-
-fn get_file_diff_between_branches_impl(repo_path: &str, branch_name: &str) -> Result<Vec<FileInfo>, Box<dyn std::error::Error>> {
-    let repo = Repository::open(repo_path)?;
+pub fn get_file_diff_between_branches(branch_name: &str) -> Result<Vec<FileInfo>, Box<dyn std::error::Error>> {
+    let repo = Repository::open(".")?;
     
     let head = repo.head()?;
     let head_commit = head.peel_to_commit()?;
@@ -149,4 +105,16 @@ fn get_file_diff_between_branches_impl(repo_path: &str, branch_name: &str) -> Re
     )?;
     
     Ok(files)
+}
+
+fn get_all_commits(repo: &Repository, start_oid: Oid) -> Result<HashSet<Oid>, git2::Error> {
+    let mut commits = HashSet::new();
+    let mut revwalk = repo.revwalk()?;
+    revwalk.push(start_oid)?;
+    
+    for oid in revwalk {
+        commits.insert(oid?);
+    }
+    
+    Ok(commits)
 }
