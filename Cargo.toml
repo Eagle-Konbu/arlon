@@ -3,6 +3,14 @@ name = "arlon"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "arlon"
+path = "src/lib.rs"
+
+[[bin]]
+name = "arlon"
+path = "src/main.rs"
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 git2 = "0.19"

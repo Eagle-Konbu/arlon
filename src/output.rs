@@ -44,7 +44,7 @@ fn print_json(commits: &[CommitInfo]) -> Result<(), Box<dyn std::error::Error>> 
     Ok(())
 }
 
-fn format_timestamp(timestamp: i64) -> String {
+pub fn format_timestamp(timestamp: i64) -> String {
     let datetime = DateTime::from_timestamp(timestamp, 0)
         .unwrap_or_else(|| DateTime::<Utc>::default());
     datetime.format("%Y-%m-%d %H:%M:%S").to_string()
