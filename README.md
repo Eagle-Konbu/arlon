@@ -17,15 +17,15 @@ A CLI tool to compare branches and files in Git repositories.
 ```bash
 git clone https://github.com/Eagle-Konbu/arlon.git
 cd arlon
-cargo build --release
+task build:release
 ```
 
 The binary will be available at `./target/release/arlon`.
 
-### Using Cargo
+### Using Task
 
 ```bash
-cargo install --path .
+task install
 ```
 
 ## Usage
@@ -197,6 +197,49 @@ arlon files develop
 # Get both commit and file differences before merging
 arlon commits main --format json > commits.json
 arlon files main --format json > files.json
+```
+
+## Development
+
+This project uses [Task](https://taskfile.dev/) for common development tasks. Available tasks:
+
+### Building
+
+```bash
+# Build in debug mode
+task build
+
+# Build in release mode (optimized)
+task build:release
+```
+
+### Testing and Quality
+
+```bash
+# Run all tests
+task test
+
+# Check the project for errors without building
+task check
+
+# Run clippy (Rust linter)
+task clippy
+
+# Format the code
+task fmt
+
+# Check if code is formatted correctly
+task fmt:check
+```
+
+### Maintenance
+
+```bash
+# Remove build artifacts
+task clean
+
+# Install the binary locally
+task install
 ```
 
 
