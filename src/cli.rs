@@ -10,7 +10,6 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Show commits in HEAD that are not in the specified branch
     Commits {
         #[arg(help = "Branch name to compare against")]
         branch: String,
@@ -18,7 +17,6 @@ pub enum Commands {
         #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
         format: OutputFormat,
     },
-    /// Show files that differ between branches
     Files {
         #[arg(help = "Branch name to compare against")]
         branch: String,
