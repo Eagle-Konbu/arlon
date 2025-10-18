@@ -1,14 +1,31 @@
-use clap::{Parser, ValueEnum};
+use clap::{Parser, Subcommand, ValueEnum};
 
 #[derive(Parser)]
 #[command(name = "arlon")]
-#[command(about = "Show commits in HEAD that are not in the specified branch")]
+#[command(about = "Compare branches and files")]
 pub struct Cli {
-    #[arg(help = "Branch name to compare against")]
-    pub branch: String,
-    
-    #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
-    pub format: OutputFormat,
+    #[command(subcommand)]
+    pub command: Commands,
+}
+
+#[derive(Subcommand)]
+pub enum Commands {
+    /// Show commits in HEAD that are not in the specified branch
+    Commits {
+        #[arg(help = "Branch name to compare against")]
+        branch: String,
+        
+        #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
+        format: OutputFormat,
+    },
+    /// Show files that differ between branches
+    Files {
+        #[arg(help = "Branch name to compare against")]
+        branch: String,
+        
+        #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
+        format: OutputFormat,
+    },
 }
 
 #[derive(Clone, ValueEnum)]

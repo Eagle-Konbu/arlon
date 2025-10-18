@@ -1,5 +1,5 @@
 use crate::cli::OutputFormat;
-use crate::git::CommitInfo;
+use crate::git::{CommitInfo, FileInfo};
 use chrono::{DateTime, Utc};
 use serde::Serialize;
 
@@ -12,10 +12,24 @@ struct JsonCommitInfo {
     message: String,
 }
 
+#[derive(Serialize)]
+struct JsonFileInfo {
+    path: String,
+    status: String,
+}
+
 pub fn print_commits(commits: &[CommitInfo], format: &OutputFormat) -> Result<(), Box<dyn std::error::Error>> {
     match format {
         OutputFormat::Simple => print_simple(commits),
         OutputFormat::Json => print_json(commits)?,
+    }
+    Ok(())
+}
+
+pub fn print_files(files: &[FileInfo], format: &OutputFormat) -> Result<(), Box<dyn std::error::Error>> {
+    match format {
+        OutputFormat::Simple => print_files_simple(files),
+        OutputFormat::Json => print_files_json(files)?,
     }
     Ok(())
 }
@@ -48,4 +62,24 @@ pub fn format_timestamp(timestamp: i64) -> String {
     let datetime = DateTime::from_timestamp(timestamp, 0)
         .unwrap_or_else(|| DateTime::<Utc>::default());
     datetime.format("%Y-%m-%d %H:%M:%S").to_string()
+}
+
+fn print_files_simple(files: &[FileInfo]) {
+    for file in files {
+        println!("{} {}", file.status, file.path);
+    }
+}
+
+fn print_files_json(files: &[FileInfo]) -> Result<(), Box<dyn std::error::Error>> {
+    let json_files: Vec<JsonFileInfo> = files
+        .iter()
+        .map(|f| JsonFileInfo {
+            path: f.path.clone(),
+            status: f.status.clone(),
+        })
+        .collect();
+    
+    let json = serde_json::to_string_pretty(&json_files)?;
+    println!("{}", json);
+    Ok(())
 }

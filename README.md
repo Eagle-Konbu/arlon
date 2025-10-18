@@ -1,14 +1,14 @@
 # Arlon
 
-A CLI tool to show commits in HEAD that are not in the specified branch.
+A CLI tool to compare branches and files in Git repositories.
 
 ## Features
 
-- Compare current branch (HEAD) with any other branch
-- Show commits that exist in HEAD but not in the target branch
+- **Commit Comparison**: Show commits in HEAD that are not in the specified branch
+- **File Comparison**: Show files that differ between branches
 - Multiple output formats:
-  - **Simple**: One-line format with hash, date, and message
-  - **JSON**: Structured format with full commit details
+  - **Simple**: One-line format with essential information
+  - **JSON**: Structured format with full details
 
 ## Installation
 
@@ -30,20 +30,31 @@ cargo install --path .
 
 ## Usage
 
-### Basic Usage
+Arlon provides two main commands for comparing branches:
+
+### 1. Commit Comparison
 
 Show commits in HEAD that are not in the specified branch:
 
 ```bash
-arlon <branch-name>
+arlon commits <branch-name>
+```
+
+### 2. File Comparison
+
+Show files that differ between branches:
+
+```bash
+arlon files <branch-name>
 ```
 
 ### Output Formats
 
 #### Simple Format (Default)
 
+**Commits:**
 ```bash
-arlon main
+arlon commits main
 ```
 
 Output:
@@ -51,10 +62,23 @@ Output:
 453d1733970aea8e088d8f57e638900ea3d8da74 2025-10-18 00:08:24 Add CLI tool with git2 and chrono dependencies
 ```
 
+**Files:**
+```bash
+arlon files main
+```
+
+Output:
+```
+modified src/cli.rs
+added test_file.txt
+modified README.md
+```
+
 #### JSON Format
 
+**Commits:**
 ```bash
-arlon main --format json
+arlon commits main --format json
 ```
 
 Output:
@@ -70,10 +94,60 @@ Output:
 ]
 ```
 
-### Options
+**Files:**
+```bash
+arlon files main --format json
+```
+
+Output:
+```json
+[
+  {
+    "path": "src/cli.rs",
+    "status": "modified"
+  },
+  {
+    "path": "test_file.txt",
+    "status": "added"
+  },
+  {
+    "path": "README.md",
+    "status": "modified"
+  }
+]
+```
+
+### Commands
 
 ```
-Usage: arlon [OPTIONS] <BRANCH>
+Usage: arlon <COMMAND>
+
+Commands:
+  commits  Show commits in HEAD that are not in the specified branch
+  files    Show files that differ between branches
+  help     Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help  Print help
+```
+
+#### Commit Command Options
+
+```
+Usage: arlon commits [OPTIONS] <BRANCH>
+
+Arguments:
+  <BRANCH>  Branch name to compare against
+
+Options:
+  -f, --format <FORMAT>  Output format [default: simple] [possible values: simple, json]
+  -h, --help             Print help
+```
+
+#### Files Command Options
+
+```
+Usage: arlon files [OPTIONS] <BRANCH>
 
 Arguments:
   <BRANCH>  Branch name to compare against
@@ -90,21 +164,39 @@ Options:
 ```bash
 # Check what commits will be merged from feature branch to main
 git checkout feature-branch
-arlon main
+arlon commits main
+```
+
+### Check file changes before merging
+
+```bash
+# Check what files have changed in the current branch compared to main
+arlon files main
 ```
 
 ### Generate release notes
 
 ```bash
 # Get commits for release notes in JSON format
-arlon release/v1.0 --format json > release-notes.json
+arlon commits release/v1.0 --format json > release-notes.json
 ```
 
 ### Review branch differences
 
 ```bash
 # Compare current branch with development branch
-arlon develop
+arlon commits develop
+
+# Check file differences with development branch
+arlon files develop
+```
+
+### Pre-merge analysis
+
+```bash
+# Get both commit and file differences before merging
+arlon commits main --format json > commits.json
+arlon files main --format json > files.json
 ```
 
 

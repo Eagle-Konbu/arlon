@@ -3,7 +3,7 @@ mod git;
 mod output;
 
 use clap::Parser;
-use cli::Cli;
+use cli::{Cli, Commands};
 use std::process;
 
 fn main() {
@@ -16,7 +16,15 @@ fn main() {
 }
 
 fn run(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
-    let commits = git::get_commits_not_in_branch(&cli.branch)?;
-    output::print_commits(&commits, &cli.format)?;
+    match &cli.command {
+        Commands::Commits { branch, format } => {
+            let commits = git::get_commits_not_in_branch(branch)?;
+            output::print_commits(&commits, format)?;
+        }
+        Commands::Files { branch, format } => {
+            let files = git::get_file_diff_between_branches(branch)?;
+            output::print_files(&files, format)?;
+        }
+    }
     Ok(())
 }
