@@ -1,8 +1,8 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use git2::{Repository, Oid};
+use serde::Serialize;
 use std::collections::HashSet;
 use std::process;
-use chrono;
 
 #[derive(Parser)]
 #[command(name = "arlon")]
@@ -10,18 +10,36 @@ use chrono;
 struct Cli {
     #[arg(help = "Branch name to compare against")]
     branch: String,
+    
+    #[arg(short, long, value_enum, default_value = "simple", help = "Output format")]
+    format: OutputFormat,
+}
+
+#[derive(Clone, ValueEnum)]
+enum OutputFormat {
+    Simple,
+    Json,
+}
+
+#[derive(Serialize)]
+struct CommitInfo {
+    hash: String,
+    author: String,
+    email: String,
+    date: String,
+    message: String,
 }
 
 fn main() {
     let cli = Cli::parse();
     
-    if let Err(e) = run(&cli.branch) {
+    if let Err(e) = run(&cli.branch, &cli.format) {
         eprintln!("Error: {}", e);
         process::exit(1);
     }
 }
 
-fn run(branch_name: &str) -> Result<(), Box<dyn std::error::Error>> {
+fn run(branch_name: &str, format: &OutputFormat) -> Result<(), Box<dyn std::error::Error>> {
     let repo = Repository::open(".")?;
     
     let head = repo.head()?;
@@ -35,20 +53,35 @@ fn run(branch_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     let mut revwalk = repo.revwalk()?;
     revwalk.push(head_commit.id())?;
     
+    let mut commit_infos = Vec::new();
+    
     for oid in revwalk {
         let oid = oid?;
         if !commits_in_branch.contains(&oid) {
             let commit = repo.find_commit(oid)?;
-            let summary = commit.summary().unwrap_or("<no message>");
             let author = commit.author();
-            let time = commit.time();
             
-            println!("commit {}", oid);
-            println!("Author: {} <{}>", author.name().unwrap_or(""), author.email().unwrap_or(""));
-            println!("Date:   {}", format_time(time));
-            println!();
-            println!("    {}", summary);
-            println!();
+            let commit_info = CommitInfo {
+                hash: oid.to_string(),
+                author: author.name().unwrap_or("").to_string(),
+                email: author.email().unwrap_or("").to_string(),
+                date: format_timestamp(commit.time().seconds()),
+                message: commit.summary().unwrap_or("").to_string(),
+            };
+            
+            commit_infos.push(commit_info);
+        }
+    }
+    
+    match format {
+        OutputFormat::Simple => {
+            for info in commit_infos {
+                println!("{} {} {}", info.hash, info.date, info.message);
+            }
+        }
+        OutputFormat::Json => {
+            let json = serde_json::to_string_pretty(&commit_infos)?;
+            println!("{}", json);
         }
     }
     
@@ -67,18 +100,9 @@ fn get_all_commits(repo: &Repository, start_oid: Oid) -> Result<HashSet<Oid>, gi
     Ok(commits)
 }
 
-fn format_time(time: git2::Time) -> String {
-    let offset_minutes = time.offset_minutes();
-    let offset_hours = offset_minutes / 60;
-    let offset_sign = if offset_minutes >= 0 { '+' } else { '-' };
-    
-    let datetime = chrono::DateTime::from_timestamp(time.seconds(), 0)
-        .unwrap_or_default();
-    
-    format!("{} {}{:02}{:02}", 
-        datetime.format("%a %b %d %H:%M:%S %Y"),
-        offset_sign,
-        offset_hours.abs(),
-        (offset_minutes.abs() % 60)
-    )
+fn format_timestamp(timestamp: i64) -> String {
+    use chrono::{DateTime, Utc};
+    let datetime = DateTime::from_timestamp(timestamp, 0)
+        .unwrap_or_else(|| DateTime::<Utc>::default());
+    datetime.format("%Y-%m-%d %H:%M:%S").to_string()
 }
