@@ -1,5 +1,5 @@
 use crate::domain::value_objects::CommitHash;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Commit {
@@ -49,7 +49,7 @@ impl Commit {
     
     pub fn formatted_date(&self) -> String {
         let datetime = DateTime::from_timestamp(self.timestamp, 0)
-            .unwrap_or_else(|| DateTime::<Utc>::default());
+            .unwrap_or_default();
         datetime.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }
