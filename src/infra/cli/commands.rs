@@ -1,5 +1,6 @@
 use crate::infra::cli::{Commands, OutputFormat};
 use crate::infra::output::{JsonFormatter, OutputFormatter, SimpleFormatter};
+use crate::domain::repositories::GitRepository;
 use crate::infra::repositories::GitRepositoryImpl;
 use crate::application::use_cases::{CompareCommitsUseCase, CompareFilesUseCase};
 
@@ -15,14 +16,13 @@ pub enum CommandError {
     OutputError(String),
 }
 
-pub struct CommandController {
-    git_repository: GitRepositoryImpl,
+pub struct CommandController<R> {
+    git_repository: R,
 }
 
-impl CommandController {
-    pub fn new() -> Result<Self, CommandError> {
-        let git_repository = GitRepositoryImpl::open_current_dir()?;
-        Ok(Self { git_repository })
+impl<R: GitRepository> CommandController<R> {
+    pub fn new(git_repository: R) -> Self {
+        Self { git_repository }
     }
 
     pub fn execute(&self, command: Commands) -> Result<(), CommandError> {
@@ -82,5 +82,55 @@ impl CommandController {
         }
 
         Ok(())
+    }
+}
+
+impl CommandController<GitRepositoryImpl> {
+    pub fn new_with_current_dir() -> Result<Self, CommandError> {
+        let git_repository = GitRepositoryImpl::open_current_dir()?;
+        Ok(Self::new(git_repository))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::repositories::{GitRepository, GitRepositoryError};
+    use crate::domain::entities::{Commit, FileChange};
+    use crate::domain::value_objects::BranchName;
+    use crate::infra::cli::OutputFormat;
+    use mockall::mock;
+
+    mock! {
+        TestGitRepository {}
+        impl GitRepository for TestGitRepository {
+            fn get_commits_from_head(&self) -> Result<Vec<Commit>, GitRepositoryError>;
+            fn get_commits_from_branch(&self, branch: &BranchName) -> Result<Vec<Commit>, GitRepositoryError>;
+            fn get_file_changes_between_branches(&self, branch: &BranchName) -> Result<Vec<FileChange>, GitRepositoryError>;
+        }
+    }
+
+    #[test]
+    fn test_command_controller_with_mock_repository() {
+        let mut mock_repo = MockTestGitRepository::new();
+        
+        // Mock the repository behavior
+        mock_repo
+            .expect_get_commits_from_head()
+            .returning(|| Ok(vec![]));
+        
+        mock_repo
+            .expect_get_commits_from_branch()
+            .returning(|_| Ok(vec![]));
+        
+        let controller = CommandController::new(mock_repo);
+        let commands = Commands::Commits {
+            branch: "main".to_string(),
+            format: OutputFormat::Simple,
+        };
+        
+        // This should not panic - demonstrates improved testability
+        let result = controller.execute(commands);
+        assert!(result.is_ok());
     }
 }

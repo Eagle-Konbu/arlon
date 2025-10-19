@@ -12,7 +12,7 @@ fn main() {
 }
 
 fn run(args: Args) -> Result<(), Box<dyn std::error::Error>> {
-    let controller = CommandController::new()?;
+    let controller = CommandController::new_with_current_dir()?;
     controller.execute(args.command)?;
     Ok(())
 }
