@@ -1,6 +1,8 @@
-use arlon::infra::cli::{Args, CommandController};
+use cli::{Args, CommandController};
 use clap::Parser;
 use std::process;
+
+mod cli;
 
 fn main() {
     let args = Args::parse();

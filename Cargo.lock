@@ -62,11 +62,19 @@ dependencies = [
 ]
 
 [[package]]
-name = "arlon"
+name = "arlon-cli"
+version = "0.1.0"
+dependencies = [
+ "arlon-core",
+ "clap",
+ "thiserror",
+]
+
+[[package]]
+name = "arlon-core"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "clap",
  "git2",
  "mockall",
  "serde",

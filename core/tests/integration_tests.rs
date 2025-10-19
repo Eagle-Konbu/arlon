@@ -1,7 +1,7 @@
-use arlon::domain::repositories::GitRepository;
-use arlon::domain::services::CommitComparisonDomainService;
-use arlon::infra::repositories::GitRepositoryImpl;
-use arlon::domain::value_objects::BranchName;
+use arlon_core::domain::repositories::GitRepository;
+use arlon_core::domain::services::CommitComparisonDomainService;
+use arlon_core::infra::repositories::GitRepositoryImpl;
+use arlon_core::domain::value_objects::BranchName;
 use tempfile::TempDir;
 use git2::{Repository, Signature, Oid};
 use std::fs;
@@ -175,7 +175,7 @@ mod integration_tests {
         assert!(head_result.is_ok());
         assert!(branch_result.is_err());
         match branch_result.unwrap_err() {
-            arlon::domain::repositories::GitRepositoryError::BranchNotFound { branch } => {
+            arlon_core::domain::repositories::GitRepositoryError::BranchNotFound { branch } => {
                 assert_eq!(branch, "nonexistent");
             }
             _ => panic!("Expected BranchNotFound error"),

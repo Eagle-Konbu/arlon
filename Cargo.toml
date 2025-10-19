@@ -1,24 +1,6 @@
-[package]
-name = "arlon"
-version = "0.1.0"
-edition = "2024"
-
-[lib]
-name = "arlon"
-path = "src/lib.rs"
-
-[[bin]]
-name = "arlon"
-path = "src/main.rs"
-
-[dependencies]
-clap = { version = "4.5", features = ["derive"] }
-git2 = "0.19"
-chrono = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-thiserror = "1.0"
-
-[dev-dependencies]
-mockall = "0.13"
-tempfile = "3.0"
+[workspace]
+members = [
+    "arlon-core",
+    "arlon-cli"
+]
+resolver = "2"

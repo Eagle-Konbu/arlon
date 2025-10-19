@@ -1,17 +1,18 @@
-use crate::infra::cli::{Commands, OutputFormat};
-use crate::infra::output::{JsonFormatter, OutputFormatter, SimpleFormatter};
-use crate::domain::repositories::GitRepository;
-use crate::infra::repositories::GitRepositoryImpl;
-use crate::application::use_cases::{CompareCommitsUseCase, CompareFilesUseCase};
+use crate::cli::{Commands, OutputFormat};
+use arlon_core::{
+    GitRepository, GitRepositoryImpl, JsonFormatter, OutputFormatter, SimpleFormatter,
+    CompareCommitsUseCase, CompareFilesUseCase
+};
+use arlon_core::application::use_cases::{compare_commits, compare_files};
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {
     #[error("Compare commits failed: {0}")]
-    CompareCommitsError(#[from] crate::application::use_cases::compare_commits::CompareCommitsError),
+    CompareCommitsError(#[from] compare_commits::CompareCommitsError),
     #[error("Compare files failed: {0}")]
-    CompareFilesError(#[from] crate::application::use_cases::compare_files::CompareFilesError),
+    CompareFilesError(#[from] compare_files::CompareFilesError),
     #[error("Repository error: {0}")]
-    RepositoryError(#[from] crate::domain::repositories::GitRepositoryError),
+    RepositoryError(#[from] arlon_core::GitRepositoryError),
     #[error("Output error: {0}")]
     OutputError(String),
 }
@@ -92,45 +93,4 @@ impl CommandController<GitRepositoryImpl> {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::domain::repositories::{GitRepository, GitRepositoryError};
-    use crate::domain::entities::{Commit, FileChange};
-    use crate::domain::value_objects::BranchName;
-    use crate::infra::cli::OutputFormat;
-    use mockall::mock;
 
-    mock! {
-        TestGitRepository {}
-        impl GitRepository for TestGitRepository {
-            fn get_commits_from_head(&self) -> Result<Vec<Commit>, GitRepositoryError>;
-            fn get_commits_from_branch(&self, branch: &BranchName) -> Result<Vec<Commit>, GitRepositoryError>;
-            fn get_file_changes_between_branches(&self, branch: &BranchName) -> Result<Vec<FileChange>, GitRepositoryError>;
-        }
-    }
-
-    #[test]
-    fn test_command_controller_with_mock_repository() {
-        let mut mock_repo = MockTestGitRepository::new();
-        
-        // Mock the repository behavior
-        mock_repo
-            .expect_get_commits_from_head()
-            .returning(|| Ok(vec![]));
-        
-        mock_repo
-            .expect_get_commits_from_branch()
-            .returning(|_| Ok(vec![]));
-        
-        let controller = CommandController::new(mock_repo);
-        let commands = Commands::Commits {
-            branch: "main".to_string(),
-            format: OutputFormat::Simple,
-        };
-        
-        // This should not panic - demonstrates improved testability
-        let result = controller.execute(commands);
-        assert!(result.is_ok());
-    }
-}

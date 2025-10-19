@@ -1,6 +1,13 @@
 # Arlon
 
-A CLI tool to compare branches and files in Git repositories.
+A Rust workspace providing both a core library and CLI tool for comparing branches and files in Git repositories.
+
+## Workspace Structure
+
+This project is organized as a Rust workspace with two main components:
+
+- **`arlon-core`**: Core library with domain logic, use cases, and Git repository operations
+- **`arlon-cli`**: Command-line interface built on top of the core library
 
 ## Features
 
