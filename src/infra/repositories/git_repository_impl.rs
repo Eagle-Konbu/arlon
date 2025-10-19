@@ -1,6 +1,7 @@
 use crate::domain::entities::{Commit, FileChange, FileChangeStatus};
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
-use crate::domain::value_objects::{BranchName, CommitHash, FilePath};
+use crate::domain::value_objects::{BranchName, CommitHash};
+use crate::infra::adapters::FilePathConverter;
 use git2::{Oid, Repository};
 
 pub struct GitRepositoryImpl {
@@ -126,15 +127,15 @@ impl GitRepository for GitRepositoryImpl {
                     git2::Delta::Conflicted => FileChangeStatus::Conflicted,
                 };
 
-                let path_str = if let Some(new_file) = delta.new_file().path() {
-                    new_file.to_string_lossy().to_string()
+                let path = if let Some(new_file) = delta.new_file().path() {
+                    new_file
                 } else if let Some(old_file) = delta.old_file().path() {
-                    old_file.to_string_lossy().to_string()
+                    old_file
                 } else {
                     return true; // Skip this delta
                 };
 
-                if let Ok(file_path) = FilePath::new(path_str) {
+                if let Ok(file_path) = FilePathConverter::from_path_buf(path) {
                     file_changes.push(FileChange::new(file_path, status));
                 }
 

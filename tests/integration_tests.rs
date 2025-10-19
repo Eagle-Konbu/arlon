@@ -149,14 +149,14 @@ mod integration_tests {
         
         println!("File changes found: {}", file_changes.len());
         for fc in &file_changes {
-            println!("  {} - {}", fc.status().as_str(), fc.path().to_string_lossy());
+            println!("  {} - {}", fc.status().as_str(), fc.path().to_string());
         }
         
         if file_changes.is_empty() {
             println!("Warning: No file changes detected between branches");
         } else {
             let has_relevant_changes = file_changes.iter().any(|fc| {
-                let path = fc.path().to_string_lossy();
+                let path = fc.path().to_string();
                 path.contains("new_file.txt") || path.contains("README.md")
             });
             assert!(has_relevant_changes, "Expected to find changes in new_file.txt or README.md");

@@ -1,8 +1,7 @@
 use std::fmt;
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct FilePath(PathBuf);
+pub struct FilePath(String);
 
 #[derive(Debug, thiserror::Error)]
 pub enum FilePathError {
@@ -18,32 +17,17 @@ impl FilePath {
             return Err(FilePathError::Empty);
         }
 
-        let path_buf = PathBuf::from(path);
-        Ok(Self(path_buf))
+        Ok(Self(path))
     }
 
-    pub fn as_path(&self) -> &std::path::Path {
+    pub fn as_str(&self) -> &str {
         &self.0
-    }
-
-    pub fn as_str(&self) -> Option<&str> {
-        self.0.to_str()
-    }
-
-    pub fn to_string_lossy(&self) -> String {
-        self.0.to_string_lossy().to_string()
     }
 }
 
 impl fmt::Display for FilePath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0.display())
-    }
-}
-
-impl From<FilePath> for PathBuf {
-    fn from(file_path: FilePath) -> Self {
-        file_path.0
+        write!(f, "{}", self.0)
     }
 }
 
@@ -56,7 +40,7 @@ mod tests {
         let path = "src/main.rs".to_string();
         let file_path = FilePath::new(path.clone());
         assert!(file_path.is_ok());
-        assert_eq!(file_path.unwrap().to_string_lossy(), path);
+        assert_eq!(file_path.unwrap().to_string(), path);
     }
 
     #[test]
@@ -71,7 +55,7 @@ mod tests {
         let path = "/home/user/project/src/main.rs".to_string();
         let file_path = FilePath::new(path.clone());
         assert!(file_path.is_ok());
-        assert_eq!(file_path.unwrap().to_string_lossy(), path);
+        assert_eq!(file_path.unwrap().to_string(), path);
     }
 
     #[test]
@@ -85,6 +69,6 @@ mod tests {
     fn test_file_path_as_str() {
         let path = "src/main.rs".to_string();
         let file_path = FilePath::new(path.clone()).unwrap();
-        assert_eq!(file_path.as_str(), Some(path.as_str()));
+        assert_eq!(file_path.as_str(), path.as_str());
     }
 }

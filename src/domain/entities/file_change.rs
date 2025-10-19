@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_file_change_creation() {
         let file_change = create_test_file_change();
-        assert_eq!(file_change.path().to_string_lossy(), "src/main.rs");
+        assert_eq!(file_change.path().to_string(), "src/main.rs");
         assert_eq!(file_change.status().as_str(), "modified");
     }
 

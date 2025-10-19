@@ -10,7 +10,7 @@ pub struct FileDto {
 impl From<FileChange> for FileDto {
     fn from(file_change: FileChange) -> Self {
         Self {
-            path: file_change.path().to_string_lossy(),
+            path: file_change.path().to_string(),
             status: file_change.status().as_str().to_string(),
         }
     }
