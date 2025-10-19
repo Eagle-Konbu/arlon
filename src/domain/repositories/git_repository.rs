@@ -15,16 +15,13 @@ pub enum GitRepositoryError {
 
 #[cfg_attr(test, mockall::automock)]
 pub trait GitRepository {
-    /// HEADから到達可能なすべてのコミットを取得する
     fn get_commits_from_head(&self) -> Result<Vec<Commit>, GitRepositoryError>;
 
-    /// 指定されたブランチから到達可能なすべてのコミットを取得する
     fn get_commits_from_branch(
         &self,
         branch: &BranchName,
     ) -> Result<Vec<Commit>, GitRepositoryError>;
 
-    /// 指定されたブランチとの間でファイルの差分を取得する
     fn get_file_changes_between_branches(
         &self,
         branch: &BranchName,

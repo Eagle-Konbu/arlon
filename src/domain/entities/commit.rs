@@ -88,10 +88,9 @@ mod tests {
     fn test_formatted_date() {
         let commit = create_test_commit();
         let formatted = commit.formatted_date();
-        // 具体的な時間ではなく、フォーマットが正しいことをテスト
         assert!(formatted.contains("2021-10-18"));
         assert!(formatted.contains(":"));
-        assert_eq!(formatted.len(), 19); // "YYYY-MM-DD HH:MM:SS" format
+        assert_eq!(formatted.len(), 19);
     }
 
     #[test]

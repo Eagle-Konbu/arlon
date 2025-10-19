@@ -25,12 +25,10 @@ impl<'a, R: GitRepository> CompareCommitsUseCase<'a, R> {
     pub fn execute(&self, branch_name: String) -> Result<Vec<CommitDto>, CompareCommitsError> {
         let branch = BranchName::new(branch_name)?;
         
-        // リポジトリからデータを取得
         let head_commits = self.git_repository.get_commits_from_head()?;
         let branch_commits = self.git_repository.get_commits_from_branch(&branch)?;
         
-        // ドメインサービスでビジネスロジックを実行
-        let commits = CommitComparisonDomainService::find_commits_not_in_branch(
+        let commits = CommitComparisonDomainService::commits_not_in_branch(
             head_commits,
             branch_commits,
         );

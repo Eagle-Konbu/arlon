@@ -17,7 +17,6 @@ impl CommitHash {
             return Err(CommitHashError::Empty);
         }
 
-        // Git ハッシュの基本的な検証（40文字の16進数）
         if hash.len() != 40 || !hash.chars().all(|c| c.is_ascii_hexdigit()) {
             return Err(CommitHashError::InvalidFormat(hash));
         }

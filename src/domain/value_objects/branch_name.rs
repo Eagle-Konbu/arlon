@@ -17,7 +17,6 @@ impl BranchName {
             return Err(BranchNameError::Empty);
         }
 
-        // 基本的なブランチ名の検証（Git のルールに基づく）
         if name.contains("..") || name.starts_with('.') || name.ends_with('.') {
             return Err(BranchNameError::InvalidCharacters(name));
         }

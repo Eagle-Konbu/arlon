@@ -46,7 +46,6 @@ mod tests {
         assert_eq!(dto.hash, "abcdef1234567890abcdef1234567890abcdef12");
         assert_eq!(dto.author, "Test Author");
         assert_eq!(dto.email, "test@example.com");
-        // 具体的な時間ではなく、日付部分をテスト
         assert!(dto.date.contains("2021-10-18"));
         assert_eq!(dto.message, "Test commit message");
     }

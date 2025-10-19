@@ -153,7 +153,6 @@ impl GitRepository for GitRepositoryImpl {
 }
 
 impl GitRepositoryImpl {
-    /// 指定されたOIDから到達可能なすべてのコミットを取得する（インフラ層の責務）
     fn get_commits_from_oid(&self, start_oid: Oid) -> Result<Vec<Commit>, GitRepositoryError> {
         let mut revwalk =
             self.repo

@@ -37,7 +37,6 @@ mod tests {
             },
         ];
         
-        // This test just ensures no panic occurs
         let result = formatter.format_commits(&commits);
         assert!(result.is_ok());
     }
@@ -52,7 +51,6 @@ mod tests {
             },
         ];
         
-        // This test just ensures no panic occurs
         let result = formatter.format_files(&files);
         assert!(result.is_ok());
     }
