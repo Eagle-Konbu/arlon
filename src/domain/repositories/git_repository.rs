@@ -13,6 +13,7 @@ pub enum GitRepositoryError {
     IoError(#[from] std::io::Error),
 }
 
+#[cfg_attr(test, mockall::automock)]
 pub trait GitRepository {
     /// 指定されたブランチに存在しないコミットを取得する
     fn get_commits_not_in_branch(

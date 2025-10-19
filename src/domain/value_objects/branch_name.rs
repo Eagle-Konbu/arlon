@@ -41,3 +41,63 @@ impl From<BranchName> for String {
         branch_name.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_branch_name() {
+        let branch_name = BranchName::new("main".to_string());
+        assert!(branch_name.is_ok());
+        assert_eq!(branch_name.unwrap().as_str(), "main");
+    }
+
+    #[test]
+    fn test_valid_branch_name_with_slash() {
+        let branch_name = BranchName::new("feature/new-feature".to_string());
+        assert!(branch_name.is_ok());
+        assert_eq!(branch_name.unwrap().as_str(), "feature/new-feature");
+    }
+
+    #[test]
+    fn test_empty_branch_name() {
+        let result = BranchName::new("".to_string());
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), BranchNameError::Empty));
+    }
+
+    #[test]
+    fn test_branch_name_with_double_dot() {
+        let result = BranchName::new("feature..bad".to_string());
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), BranchNameError::InvalidCharacters(_)));
+    }
+
+    #[test]
+    fn test_branch_name_starting_with_dot() {
+        let result = BranchName::new(".hidden".to_string());
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), BranchNameError::InvalidCharacters(_)));
+    }
+
+    #[test]
+    fn test_branch_name_ending_with_dot() {
+        let result = BranchName::new("feature.".to_string());
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), BranchNameError::InvalidCharacters(_)));
+    }
+
+    #[test]
+    fn test_branch_name_display() {
+        let branch_name = BranchName::new("main".to_string()).unwrap();
+        assert_eq!(format!("{}", branch_name), "main");
+    }
+
+    #[test]
+    fn test_branch_name_conversion_to_string() {
+        let branch_name = BranchName::new("main".to_string()).unwrap();
+        let string: String = branch_name.into();
+        assert_eq!(string, "main");
+    }
+}

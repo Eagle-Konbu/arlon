@@ -46,3 +46,45 @@ impl From<FilePath> for PathBuf {
         file_path.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_valid_file_path() {
+        let path = "src/main.rs".to_string();
+        let file_path = FilePath::new(path.clone());
+        assert!(file_path.is_ok());
+        assert_eq!(file_path.unwrap().to_string_lossy(), path);
+    }
+
+    #[test]
+    fn test_empty_file_path() {
+        let result = FilePath::new("".to_string());
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), FilePathError::Empty));
+    }
+
+    #[test]
+    fn test_absolute_file_path() {
+        let path = "/home/user/project/src/main.rs".to_string();
+        let file_path = FilePath::new(path.clone());
+        assert!(file_path.is_ok());
+        assert_eq!(file_path.unwrap().to_string_lossy(), path);
+    }
+
+    #[test]
+    fn test_file_path_display() {
+        let path = "src/main.rs".to_string();
+        let file_path = FilePath::new(path.clone()).unwrap();
+        assert_eq!(format!("{}", file_path), path);
+    }
+
+    #[test]
+    fn test_file_path_as_str() {
+        let path = "src/main.rs".to_string();
+        let file_path = FilePath::new(path.clone()).unwrap();
+        assert_eq!(file_path.as_str(), Some(path.as_str()));
+    }
+}
