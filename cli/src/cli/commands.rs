@@ -8,13 +8,13 @@ use arlon_core::{
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {
     #[error("Compare commits failed: {0}")]
-    CompareCommitsError(#[from] compare_commits::CompareCommitsError),
+    CompareCommits(#[from] compare_commits::CompareCommitsError),
     #[error("Compare files failed: {0}")]
-    CompareFilesError(#[from] compare_files::CompareFilesError),
+    CompareFiles(#[from] compare_files::CompareFilesError),
     #[error("Repository error: {0}")]
-    RepositoryError(#[from] arlon_core::GitRepositoryError),
+    Repository(#[from] arlon_core::GitRepositoryError),
     #[error("Output error: {0}")]
-    OutputError(String),
+    Output(String),
 }
 
 pub struct CommandController<R> {
@@ -46,13 +46,13 @@ impl<R: GitRepository> CommandController<R> {
                 let formatter = SimpleFormatter;
                 formatter
                     .format_commits(&commits)
-                    .map_err(CommandError::OutputError)?;
+                    .map_err(CommandError::Output)?;
             }
             OutputFormat::Json => {
                 let formatter = JsonFormatter;
                 formatter
                     .format_commits(&commits)
-                    .map_err(CommandError::OutputError)?;
+                    .map_err(CommandError::Output)?;
             }
         }
 
@@ -72,13 +72,13 @@ impl<R: GitRepository> CommandController<R> {
                 let formatter = SimpleFormatter;
                 formatter
                     .format_files(&files)
-                    .map_err(CommandError::OutputError)?;
+                    .map_err(CommandError::Output)?;
             }
             OutputFormat::Json => {
                 let formatter = JsonFormatter;
                 formatter
                     .format_files(&files)
-                    .map_err(CommandError::OutputError)?;
+                    .map_err(CommandError::Output)?;
             }
         }
 
