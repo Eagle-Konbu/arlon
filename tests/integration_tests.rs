@@ -1,4 +1,5 @@
 use arlon::domain::repositories::GitRepository;
+use arlon::domain::services::CommitComparisonService;
 use arlon::infra::repositories::GitRepositoryImpl;
 use arlon::domain::value_objects::BranchName;
 use tempfile::TempDir;
@@ -108,7 +109,7 @@ mod integration_tests {
     use super::*;
     
     #[test]
-    fn test_git2_repository_get_commits_not_in_branch() {
+    fn test_commit_comparison_service() {
         let test_repo = TestGitRepo::new().unwrap();
         
         // mainブランチを作成してチェックアウト
@@ -127,9 +128,10 @@ mod integration_tests {
         // GitRepositoryImplを作成
         let git_repo = GitRepositoryImpl::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
         
-        // mainブランチに存在しないコミットを取得
+        // CommitComparisonServiceを使用してmainブランチに存在しないコミットを取得
+        let service = CommitComparisonService::new();
         let branch_name = BranchName::new("main".to_string()).unwrap();
-        let result = git_repo.get_commits_not_in_branch(&branch_name);
+        let result = service.find_commits_not_in_branch(&git_repo, &branch_name);
         
         assert!(result.is_ok());
         let commits = result.unwrap();
@@ -189,7 +191,8 @@ mod integration_tests {
         
         // 存在しないブランチを指定
         let branch_name = BranchName::new("nonexistent".to_string()).unwrap();
-        let result = git_repo.get_commits_not_in_branch(&branch_name);
+        let service = CommitComparisonService::new();
+        let result = service.find_commits_not_in_branch(&git_repo, &branch_name);
         
         assert!(result.is_err());
         // ブランチが見つからないエラーになることを確認

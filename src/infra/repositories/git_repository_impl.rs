@@ -2,7 +2,6 @@ use crate::domain::entities::{Commit, FileChange, FileChangeStatus};
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
 use crate::domain::value_objects::{BranchName, CommitHash, FilePath};
 use git2::{Oid, Repository};
-use std::collections::HashSet;
 
 pub struct GitRepositoryImpl {
     repo: Repository,
@@ -23,10 +22,7 @@ impl GitRepositoryImpl {
 }
 
 impl GitRepository for GitRepositoryImpl {
-    fn get_commits_not_in_branch(
-        &self,
-        branch: &BranchName,
-    ) -> Result<Vec<Commit>, GitRepositoryError> {
+    fn get_commits_from_head(&self) -> Result<Vec<Commit>, GitRepositoryError> {
         let head = self
             .repo
             .head()
@@ -39,6 +35,13 @@ impl GitRepository for GitRepositoryImpl {
                     message: format!("Failed to get HEAD commit: {}", e),
                 })?;
 
+        self.get_commits_from_oid(head_commit.id())
+    }
+
+    fn get_commits_from_branch(
+        &self,
+        branch: &BranchName,
+    ) -> Result<Vec<Commit>, GitRepositoryError> {
         let branch_ref = self
             .repo
             .find_branch(branch.as_str(), git2::BranchType::Local)
@@ -51,54 +54,7 @@ impl GitRepository for GitRepositoryImpl {
             }
         })?;
 
-        let commits_in_branch = self.get_all_commits(branch_commit.id())?;
-
-        let mut revwalk =
-            self.repo
-                .revwalk()
-                .map_err(|e| GitRepositoryError::GitOperationFailed {
-                    message: format!("Failed to create revwalk: {}", e),
-                })?;
-        revwalk
-            .push(head_commit.id())
-            .map_err(|e| GitRepositoryError::GitOperationFailed {
-                message: format!("Failed to push HEAD to revwalk: {}", e),
-            })?;
-
-        let mut commits = Vec::new();
-
-        for oid in revwalk {
-            let oid = oid.map_err(|e| GitRepositoryError::GitOperationFailed {
-                message: format!("Failed to get commit OID: {}", e),
-            })?;
-
-            if !commits_in_branch.contains(&oid) {
-                let commit = self.repo.find_commit(oid).map_err(|e| {
-                    GitRepositoryError::GitOperationFailed {
-                        message: format!("Failed to find commit: {}", e),
-                    }
-                })?;
-                let author = commit.author();
-
-                let hash = CommitHash::new(oid.to_string()).map_err(|e| {
-                    GitRepositoryError::GitOperationFailed {
-                        message: format!("Invalid commit hash: {}", e),
-                    }
-                })?;
-
-                let domain_commit = Commit::new(
-                    hash,
-                    author.name().unwrap_or("").to_string(),
-                    author.email().unwrap_or("").to_string(),
-                    commit.time().seconds(),
-                    commit.summary().unwrap_or("").to_string(),
-                );
-
-                commits.push(domain_commit);
-            }
-        }
-
-        Ok(commits)
+        self.get_commits_from_oid(branch_commit.id())
     }
 
     fn get_file_changes_between_branches(
@@ -197,8 +153,8 @@ impl GitRepository for GitRepositoryImpl {
 }
 
 impl GitRepositoryImpl {
-    fn get_all_commits(&self, start_oid: Oid) -> Result<HashSet<Oid>, GitRepositoryError> {
-        let mut commits = HashSet::new();
+    /// 指定されたOIDから到達可能なすべてのコミットを取得する（インフラ層の責務）
+    fn get_commits_from_oid(&self, start_oid: Oid) -> Result<Vec<Commit>, GitRepositoryError> {
         let mut revwalk =
             self.repo
                 .revwalk()
@@ -211,11 +167,35 @@ impl GitRepositoryImpl {
                 message: format!("Failed to push OID to revwalk: {}", e),
             })?;
 
+        let mut commits = Vec::new();
+
         for oid in revwalk {
             let oid = oid.map_err(|e| GitRepositoryError::GitOperationFailed {
                 message: format!("Failed to get commit OID: {}", e),
             })?;
-            commits.insert(oid);
+
+            let commit = self.repo.find_commit(oid).map_err(|e| {
+                GitRepositoryError::GitOperationFailed {
+                    message: format!("Failed to find commit: {}", e),
+                }
+            })?;
+            let author = commit.author();
+
+            let hash = CommitHash::new(oid.to_string()).map_err(|e| {
+                GitRepositoryError::GitOperationFailed {
+                    message: format!("Invalid commit hash: {}", e),
+                }
+            })?;
+
+            let domain_commit = Commit::new(
+                hash,
+                author.name().unwrap_or("").to_string(),
+                author.email().unwrap_or("").to_string(),
+                commit.time().seconds(),
+                commit.summary().unwrap_or("").to_string(),
+            );
+
+            commits.push(domain_commit);
         }
 
         Ok(commits)

@@ -41,10 +41,8 @@ mod tests {
         TestGitRepository {}
 
         impl GitRepository for TestGitRepository {
-            fn get_commits_not_in_branch(
-                &self,
-                branch: &BranchName,
-            ) -> Result<Vec<crate::domain::entities::Commit>, GitRepositoryError>;
+            fn get_commits_from_head(&self) -> Result<Vec<crate::domain::entities::Commit>, GitRepositoryError>;
+            fn get_commits_from_branch(&self, branch: &BranchName) -> Result<Vec<crate::domain::entities::Commit>, GitRepositoryError>;
 
             fn get_file_changes_between_branches(
                 &self,

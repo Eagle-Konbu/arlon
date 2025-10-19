@@ -15,8 +15,11 @@ pub enum GitRepositoryError {
 
 #[cfg_attr(test, mockall::automock)]
 pub trait GitRepository {
-    /// 指定されたブランチに存在しないコミットを取得する
-    fn get_commits_not_in_branch(
+    /// HEADから到達可能なすべてのコミットを取得する
+    fn get_commits_from_head(&self) -> Result<Vec<Commit>, GitRepositoryError>;
+
+    /// 指定されたブランチから到達可能なすべてのコミットを取得する
+    fn get_commits_from_branch(
         &self,
         branch: &BranchName,
     ) -> Result<Vec<Commit>, GitRepositoryError>;

@@ -1,4 +1,5 @@
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
+use crate::domain::services::CommitComparisonService;
 use crate::domain::value_objects::{BranchName, BranchNameError};
 use crate::service::dto::CommitDto;
 
@@ -12,16 +13,21 @@ pub enum CompareCommitsError {
 
 pub struct CompareCommitsUseCase<'a, R> {
     git_repository: &'a R,
+    commit_comparison_service: CommitComparisonService,
 }
 
 impl<'a, R: GitRepository> CompareCommitsUseCase<'a, R> {
     pub fn new(git_repository: &'a R) -> Self {
-        Self { git_repository }
+        Self { 
+            git_repository,
+            commit_comparison_service: CommitComparisonService::new(),
+        }
     }
 
     pub fn execute(&self, branch_name: String) -> Result<Vec<CommitDto>, CompareCommitsError> {
         let branch = BranchName::new(branch_name)?;
-        let commits = self.git_repository.get_commits_not_in_branch(&branch)?;
+        let commits = self.commit_comparison_service
+            .find_commits_not_in_branch(self.git_repository, &branch)?;
 
         Ok(commits.into_iter().map(CommitDto::from).collect())
     }
@@ -40,10 +46,8 @@ mod tests {
         TestGitRepository {}
 
         impl GitRepository for TestGitRepository {
-            fn get_commits_not_in_branch(
-                &self,
-                branch: &BranchName,
-            ) -> Result<Vec<Commit>, GitRepositoryError>;
+            fn get_commits_from_head(&self) -> Result<Vec<Commit>, GitRepositoryError>;
+            fn get_commits_from_branch(&self, branch: &BranchName) -> Result<Vec<Commit>, GitRepositoryError>;
 
             fn get_file_changes_between_branches(
                 &self,
@@ -67,12 +71,18 @@ mod tests {
     fn test_execute_success() {
         let mut mock_repo = MockTestGitRepository::new();
         let test_commit = create_test_commit();
-        let expected_commits = vec![test_commit];
+        let head_commits = vec![test_commit.clone()];
+        let branch_commits = vec![];
         
         mock_repo
-            .expect_get_commits_not_in_branch()
+            .expect_get_commits_from_head()
             .times(1)
-            .returning(move |_| Ok(expected_commits.clone()));
+            .returning(move || Ok(head_commits.clone()));
+        
+        mock_repo
+            .expect_get_commits_from_branch()
+            .times(1)
+            .returning(move |_| Ok(branch_commits.clone()));
         
         let use_case = CompareCommitsUseCase::new(&mock_repo);
         let result = use_case.execute("main".to_string());
@@ -104,8 +114,8 @@ mod tests {
         let mut mock_repo = MockTestGitRepository::new();
         
         mock_repo
-            .expect_get_commits_not_in_branch()
-            .returning(|_| Err(GitRepositoryError::BranchNotFound {
+            .expect_get_commits_from_head()
+            .returning(|| Err(GitRepositoryError::BranchNotFound {
                 branch: "nonexistent".to_string(),
             }));
         
@@ -124,7 +134,11 @@ mod tests {
         let mut mock_repo = MockTestGitRepository::new();
         
         mock_repo
-            .expect_get_commits_not_in_branch()
+            .expect_get_commits_from_head()
+            .returning(|| Ok(vec![]));
+        
+        mock_repo
+            .expect_get_commits_from_branch()
             .returning(|_| Ok(vec![]));
         
         let use_case = CompareCommitsUseCase::new(&mock_repo);
