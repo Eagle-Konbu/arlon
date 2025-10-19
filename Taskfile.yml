@@ -1,5 +1,9 @@
 version: '3'
 
+# ========================================
+# Template System - Source Patterns
+# ========================================
+
 vars:
   PROJECT_NAME: arlon
   CLI_BINARY_NAME: arlon
@@ -11,6 +15,44 @@ vars:
   TARGET_DIR: target
   RELEASE_DIR: "{{.TARGET_DIR}}/release"
   DEBUG_DIR: "{{.TARGET_DIR}}/debug"
+  CACHE_DIR: .task/cache
+  
+  # Dynamic variables
+  GIT_COMMIT:
+    sh: git rev-parse --short HEAD
+  BUILD_DATE:
+    sh: date -Iseconds
+
+  # Common source pattern templates
+  RUST_SOURCES: |
+    {{.CORE_DIR}}/src/**/*.rs
+    {{.CLI_DIR}}/src/**/*.rs
+    */Cargo.toml
+    Cargo.lock
+  
+  CORE_SOURCES: |
+    {{.CORE_DIR}}/src/**/*.rs
+    {{.CORE_DIR}}/Cargo.toml
+    Cargo.lock
+  
+  CLI_SOURCES: |
+    {{.CLI_DIR}}/src/**/*.rs
+    {{.CLI_DIR}}/Cargo.toml
+    Cargo.lock
+  
+  TEST_SOURCES: |
+    {{.CORE_DIR}}/src/**/*.rs
+    {{.CLI_DIR}}/src/**/*.rs
+    {{.CORE_DIR}}/tests/**/*.rs
+    */Cargo.toml
+    Cargo.lock
+  
+  CONFIG_SOURCES: |
+    rust-toolchain.toml
+    rustfmt.toml
+    .rustfmt.toml
+    clippy.toml
+    .clippy.toml
 
 # Global environment variables
 env:
@@ -32,6 +74,44 @@ tasks:
     desc: Show available tasks
     cmds:
       - task --list
+
+  # ========================================
+  # Cache System Setup
+  # ========================================
+  
+  # ========================================
+  # Internal Cache Management (rarely used by end users)
+  # ========================================
+
+  __cache:init:
+    desc: "[Internal] Initialize cache directory"
+    cmds:
+      - mkdir -p {{.CACHE_DIR}}
+      - echo "Cache initialized at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/init-timestamp
+    status:
+      - test -d {{.CACHE_DIR}}
+    internal: true
+
+  clean:cache:
+    desc: Clean task cache files and force rebuild on next run
+    cmds:
+      - rm -rf {{.CACHE_DIR}}
+      - echo "Task cache cleaned successfully. Next task runs will rebuild everything."
+
+  info:cache:
+    desc: Show task cache status and performance information
+    deps: [__cache:init]
+    cmds:
+      - 'echo "=== Task Cache Information ==="'
+      - 'echo "Cache directory: {{.CACHE_DIR}}"'
+      - 'echo "Last initialized: $(cat {{.CACHE_DIR}}/init-timestamp 2>/dev/null || echo Never)"'
+      - 'echo "Cache size: $(du -sh {{.CACHE_DIR}} 2>/dev/null | cut -f1 || echo Unknown)"'
+      - 'echo "Cached tasks: $(find {{.CACHE_DIR}} -name "*-timestamp" -type f 2>/dev/null | wc -l || echo 0)"'
+      - 'echo ""'
+      - 'echo "=== Recent Task Activity ==="'
+      - 'find {{.CACHE_DIR}} -name "*-timestamp" -type f -exec ls -lt {} \; 2>/dev/null | head -5 | sed "s|{{.CACHE_DIR}}/||g" | sed "s|-timestamp||g" || echo "No cached tasks found"'
+      - 'echo ""'
+      - 'echo "Tip: Use \"task clean:cache\" to clear cache and force full rebuild."'
 
   # ========================================
   # Development Tasks
@@ -127,20 +207,45 @@ tasks:
 
   test:
     desc: Run all tests (unit + integration) for all packages
+    deps: [__cache:init, build:core]
     cmds:
       - cargo test --workspace
-    deps: [build:core]
+      - echo "Tests completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/test-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/tests/**/*.rs"
+      - "*/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.CACHE_DIR}}/test-timestamp"
 
   test:core:
     desc: Run tests for core library only
+    deps: [__cache:init]
     cmds:
       - cargo test -p {{.CORE_PACKAGE}}
+      - echo "Core tests completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/test-core-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/tests/**/*.rs"
+      - "{{.CORE_DIR}}/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.CACHE_DIR}}/test-core-timestamp"
 
   test:cli:
     desc: Run tests for CLI package only
-    deps: [build:core]
+    deps: [__cache:init, build:core]
     cmds:
       - cargo test -p {{.CLI_PACKAGE}}
+      - echo "CLI tests completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/test-cli-timestamp
+    sources:
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.CACHE_DIR}}/test-cli-timestamp"
 
   test:unit:
     desc: Run only unit tests
@@ -159,9 +264,19 @@ tasks:
 
   test:coverage:
     desc: Run tests with coverage report
-    deps: [install:tarpaulin]
+    deps: [_cache:init, install:tarpaulin]
     cmds:
       - cargo tarpaulin --workspace --out Html --output-dir coverage
+      - echo "Coverage completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/coverage-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/tests/**/*.rs"
+      - "*/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "coverage/tarpaulin-report.html"
+      - "{{.CACHE_DIR}}/coverage-timestamp"
 
   # ========================================
   # Quality Assurance Tasks
@@ -169,33 +284,89 @@ tasks:
 
   check:
     desc: Check all packages for errors without building
+    deps: [_cache:init]
     cmds:
       - cargo check --workspace
+      - echo "Check completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/check-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "*/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.CACHE_DIR}}/check-timestamp"
 
   check:core:
     desc: Check core library for errors
+    deps: [_cache:init]
     cmds:
       - cargo check -p {{.CORE_PACKAGE}}
+      - echo "Check core completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/check-core-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.CACHE_DIR}}/check-core-timestamp"
 
   check:cli:
     desc: Check CLI package for errors
+    deps: [_cache:init]
     cmds:
       - cargo check -p {{.CLI_PACKAGE}}
+      - echo "Check CLI completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/check-cli-timestamp
+    sources:
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.CACHE_DIR}}/check-cli-timestamp"
 
   clippy:
     desc: Run clippy (Rust linter) on all packages
+    deps: [_cache:init]
     cmds:
       - cargo clippy --workspace -- -D warnings
+      - echo "Clippy completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/clippy-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "*/Cargo.toml"
+      - Cargo.lock
+      - clippy.toml
+      - .clippy.toml
+    generates:
+      - "{{.CACHE_DIR}}/clippy-timestamp"
 
   clippy:core:
     desc: Run clippy on core library
+    deps: [_cache:init]
     cmds:
       - cargo clippy -p {{.CORE_PACKAGE}} -- -D warnings
+      - echo "Clippy core completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/clippy-core-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/Cargo.toml"
+      - Cargo.lock
+      - clippy.toml
+      - .clippy.toml
+    generates:
+      - "{{.CACHE_DIR}}/clippy-core-timestamp"
 
   clippy:cli:
     desc: Run clippy on CLI package
+    deps: [_cache:init]
     cmds:
       - cargo clippy -p {{.CLI_PACKAGE}} -- -D warnings
+      - echo "Clippy CLI completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/clippy-cli-timestamp
+    sources:
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/Cargo.toml"
+      - Cargo.lock
+      - clippy.toml
+      - .clippy.toml
+    generates:
+      - "{{.CACHE_DIR}}/clippy-cli-timestamp"
 
   clippy:fix:
     desc: Auto-fix clippy warnings where possible
@@ -223,12 +394,19 @@ tasks:
   # ========================================
 
   clean:
-    desc: Remove all build artifacts
+    desc: Remove all build artifacts (cargo clean)
     cmds:
       - cargo clean
 
+  clean:all:
+    desc: Deep clean - remove all build artifacts and task cache
+    cmds:
+      - cargo clean
+      - rm -rf {{.CACHE_DIR}}
+      - echo "All build artifacts and task cache cleared"
+
   clean:target:
-    desc: Remove target directory
+    desc: Remove target directory only
     cmds:
       - rm -rf {{.TARGET_DIR}}
 
@@ -292,8 +470,19 @@ tasks:
 
   doc:
     desc: Generate documentation for all packages
+    deps: [_cache:init]
     cmds:
       - cargo doc --workspace --no-deps
+      - echo "Documentation completed at {{.BUILD_DATE}}" > {{.CACHE_DIR}}/doc-timestamp
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "*/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "target/doc/arlon_core/index.html"
+      - "target/doc/arlon_cli/index.html"
+      - "{{.CACHE_DIR}}/doc-timestamp"
 
   doc:open:
     desc: Generate and open documentation
