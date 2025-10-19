@@ -1,5 +1,5 @@
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
-use crate::domain::services::CommitComparisonService;
+use crate::domain::services::CommitComparisonDomainService;
 use crate::domain::value_objects::{BranchName, BranchNameError};
 use crate::service::dto::CommitDto;
 
@@ -13,21 +13,27 @@ pub enum CompareCommitsError {
 
 pub struct CompareCommitsUseCase<'a, R> {
     git_repository: &'a R,
-    commit_comparison_service: CommitComparisonService,
 }
 
 impl<'a, R: GitRepository> CompareCommitsUseCase<'a, R> {
     pub fn new(git_repository: &'a R) -> Self {
         Self { 
             git_repository,
-            commit_comparison_service: CommitComparisonService::new(),
         }
     }
 
     pub fn execute(&self, branch_name: String) -> Result<Vec<CommitDto>, CompareCommitsError> {
         let branch = BranchName::new(branch_name)?;
-        let commits = self.commit_comparison_service
-            .find_commits_not_in_branch(self.git_repository, &branch)?;
+        
+        // リポジトリからデータを取得
+        let head_commits = self.git_repository.get_commits_from_head()?;
+        let branch_commits = self.git_repository.get_commits_from_branch(&branch)?;
+        
+        // ドメインサービスでビジネスロジックを実行
+        let commits = CommitComparisonDomainService::find_commits_not_in_branch(
+            head_commits,
+            branch_commits,
+        );
 
         Ok(commits.into_iter().map(CommitDto::from).collect())
     }

@@ -1,5 +1,5 @@
 use arlon::domain::repositories::GitRepository;
-use arlon::domain::services::CommitComparisonService;
+use arlon::domain::services::CommitComparisonDomainService;
 use arlon::infra::repositories::GitRepositoryImpl;
 use arlon::domain::value_objects::BranchName;
 use tempfile::TempDir;
@@ -128,13 +128,15 @@ mod integration_tests {
         // GitRepositoryImplを作成
         let git_repo = GitRepositoryImpl::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
         
-        // CommitComparisonServiceを使用してmainブランチに存在しないコミットを取得
-        let service = CommitComparisonService::new();
+        // CommitComparisonDomainServiceを使用してmainブランチに存在しないコミットを取得
         let branch_name = BranchName::new("main".to_string()).unwrap();
-        let result = service.find_commits_not_in_branch(&git_repo, &branch_name);
+        let head_commits = git_repo.get_commits_from_head().unwrap();
+        let branch_commits = git_repo.get_commits_from_branch(&branch_name).unwrap();
         
-        assert!(result.is_ok());
-        let commits = result.unwrap();
+        let commits = CommitComparisonDomainService::find_commits_not_in_branch(
+            head_commits,
+            branch_commits,
+        );
         // masterにあってmainにないコミットは存在しないはず
         assert_eq!(commits.len(), 0);
     }
@@ -191,12 +193,13 @@ mod integration_tests {
         
         // 存在しないブランチを指定
         let branch_name = BranchName::new("nonexistent".to_string()).unwrap();
-        let service = CommitComparisonService::new();
-        let result = service.find_commits_not_in_branch(&git_repo, &branch_name);
+        let head_result = git_repo.get_commits_from_head();
+        let branch_result = git_repo.get_commits_from_branch(&branch_name);
         
-        assert!(result.is_err());
         // ブランチが見つからないエラーになることを確認
-        match result.unwrap_err() {
+        assert!(head_result.is_ok());
+        assert!(branch_result.is_err());
+        match branch_result.unwrap_err() {
             arlon::domain::repositories::GitRepositoryError::BranchNotFound { branch } => {
                 assert_eq!(branch, "nonexistent");
             }
