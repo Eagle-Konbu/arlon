@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 description = "Core library for Git repository comparison and analysis"
 license = "MIT"
+repository = "https://github.com/Eagle-Konbu/arlon"
 
 [dependencies]
 git2 = "0.19"
