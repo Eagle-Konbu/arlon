@@ -149,7 +149,7 @@ mod integration_tests {
         
         println!("File changes found: {}", file_changes.len());
         for fc in &file_changes {
-            println!("  {} - {}", fc.status().as_str(), fc.path().to_string());
+            println!("  {} - {}", fc.status().as_str(), fc.path());
         }
         
         if file_changes.is_empty() {

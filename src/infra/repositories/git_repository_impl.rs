@@ -109,7 +109,7 @@ impl GitRepository for GitRepositoryImpl {
                 message: format!("Failed to create diff: {}", e),
             })?;
 
-        let mut file_changes = Vec::new();
+        let mut file_changes = Vec::with_capacity(diff.deltas().len());
 
         diff.foreach(
             &mut |delta, _progress| {
@@ -187,12 +187,28 @@ impl GitRepositoryImpl {
                 }
             })?;
 
+            let author_name = author.name().ok_or_else(|| {
+                GitRepositoryError::GitOperationFailed {
+                    message: format!("Missing author name for commit {}", oid),
+                }
+            })?;
+            let author_email = author.email().ok_or_else(|| {
+                GitRepositoryError::GitOperationFailed {
+                    message: format!("Missing author email for commit {}", oid),
+                }
+            })?;
+            let commit_message = commit.summary().ok_or_else(|| {
+                GitRepositoryError::GitOperationFailed {
+                    message: format!("Missing commit message for commit {}", oid),
+                }
+            })?;
+
             let domain_commit = Commit::new(
                 hash,
-                author.name().unwrap_or("").to_string(),
-                author.email().unwrap_or("").to_string(),
+                author_name.to_string(),
+                author_email.to_string(),
                 commit.time().seconds(),
-                commit.summary().unwrap_or("").to_string(),
+                commit_message.to_string(),
             );
 
             commits.push(domain_commit);
