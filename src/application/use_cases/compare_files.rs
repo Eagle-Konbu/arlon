@@ -1,6 +1,6 @@
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
 use crate::domain::value_objects::{BranchName, BranchNameError};
-use crate::service::dto::FileDto;
+use crate::application::dto::FileDto;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CompareFilesError {

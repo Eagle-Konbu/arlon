@@ -1,4 +1,4 @@
-use crate::service::dto::{CommitDto, FileDto};
+use crate::application::dto::{CommitDto, FileDto};
 
 pub trait OutputFormatter {
     fn format_commits(&self, commits: &[CommitDto]) -> Result<(), String>;

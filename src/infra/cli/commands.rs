@@ -1,14 +1,14 @@
 use crate::infra::cli::{Commands, OutputFormat};
 use crate::infra::output::{JsonFormatter, OutputFormatter, SimpleFormatter};
 use crate::infra::repositories::GitRepositoryImpl;
-use crate::service::use_cases::{CompareCommitsUseCase, CompareFilesUseCase};
+use crate::application::use_cases::{CompareCommitsUseCase, CompareFilesUseCase};
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {
     #[error("Compare commits failed: {0}")]
-    CompareCommitsError(#[from] crate::service::use_cases::compare_commits::CompareCommitsError),
+    CompareCommitsError(#[from] crate::application::use_cases::compare_commits::CompareCommitsError),
     #[error("Compare files failed: {0}")]
-    CompareFilesError(#[from] crate::service::use_cases::compare_files::CompareFilesError),
+    CompareFilesError(#[from] crate::application::use_cases::compare_files::CompareFilesError),
     #[error("Repository error: {0}")]
     RepositoryError(#[from] crate::domain::repositories::GitRepositoryError),
     #[error("Output error: {0}")]

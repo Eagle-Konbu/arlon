@@ -1,7 +1,7 @@
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
 use crate::domain::services::CommitComparisonDomainService;
 use crate::domain::value_objects::{BranchName, BranchNameError};
-use crate::service::dto::CommitDto;
+use crate::application::dto::CommitDto;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CompareCommitsError {

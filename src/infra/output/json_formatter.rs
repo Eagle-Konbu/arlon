@@ -1,5 +1,5 @@
 use crate::infra::output::OutputFormatter;
-use crate::service::dto::{CommitDto, FileDto};
+use crate::application::dto::{CommitDto, FileDto};
 
 pub struct JsonFormatter;
 
@@ -22,7 +22,7 @@ impl OutputFormatter for JsonFormatter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::service::dto::{CommitDto, FileDto};
+    use crate::application::dto::{CommitDto, FileDto};
 
     #[test]
     fn test_format_commits() {
