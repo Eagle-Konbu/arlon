@@ -4,11 +4,11 @@ use crate::domain::value_objects::{BranchName, CommitHash, FilePath};
 use git2::{Oid, Repository};
 use std::collections::HashSet;
 
-pub struct Git2Repository {
+pub struct GitRepositoryImpl {
     repo: Repository,
 }
 
-impl Git2Repository {
+impl GitRepositoryImpl {
     pub fn open(path: &str) -> Result<Self, GitRepositoryError> {
         let repo = Repository::open(path).map_err(|e| GitRepositoryError::GitOperationFailed {
             message: format!("Failed to open repository: {}", e),
@@ -22,7 +22,7 @@ impl Git2Repository {
     }
 }
 
-impl GitRepository for Git2Repository {
+impl GitRepository for GitRepositoryImpl {
     fn get_commits_not_in_branch(
         &self,
         branch: &BranchName,
@@ -196,7 +196,7 @@ impl GitRepository for Git2Repository {
     }
 }
 
-impl Git2Repository {
+impl GitRepositoryImpl {
     fn get_all_commits(&self, start_oid: Oid) -> Result<HashSet<Oid>, GitRepositoryError> {
         let mut commits = HashSet::new();
         let mut revwalk =

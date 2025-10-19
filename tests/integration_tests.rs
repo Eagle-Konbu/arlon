@@ -1,5 +1,5 @@
 use arlon::domain::repositories::GitRepository;
-use arlon::infra::repositories::Git2Repository;
+use arlon::infra::repositories::GitRepositoryImpl;
 use arlon::domain::value_objects::BranchName;
 use tempfile::TempDir;
 use git2::{Repository, Signature, Oid};
@@ -124,8 +124,8 @@ mod integration_tests {
         // masterブランチに戻る（初期コミットのみ）
         test_repo.checkout_branch("master").unwrap();
         
-        // Git2Repositoryを作成
-        let git_repo = Git2Repository::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
+        // GitRepositoryImplを作成
+        let git_repo = GitRepositoryImpl::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
         
         // mainブランチに存在しないコミットを取得
         let branch_name = BranchName::new("main".to_string()).unwrap();
@@ -151,8 +151,8 @@ mod integration_tests {
             &[("new_file.txt", "This is a new file")],
         ).unwrap();
         
-        // Git2Repositoryを作成（featureブランチをチェックアウト状態）
-        let git_repo = Git2Repository::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
+        // GitRepositoryImplを作成（featureブランチをチェックアウト状態）
+        let git_repo = GitRepositoryImpl::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
         
         // masterブランチとの差分を取得
         let branch_name = BranchName::new("master".to_string()).unwrap();
@@ -185,7 +185,7 @@ mod integration_tests {
     #[test]
     fn test_git2_repository_branch_not_found() {
         let test_repo = TestGitRepo::new().unwrap();
-        let git_repo = Git2Repository::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
+        let git_repo = GitRepositoryImpl::open(test_repo.temp_dir.path().to_str().unwrap()).unwrap();
         
         // 存在しないブランチを指定
         let branch_name = BranchName::new("nonexistent".to_string()).unwrap();

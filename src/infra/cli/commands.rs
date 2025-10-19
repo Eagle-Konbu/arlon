@@ -1,6 +1,6 @@
 use crate::infra::cli::{Commands, OutputFormat};
 use crate::infra::output::{JsonFormatter, OutputFormatter, SimpleFormatter};
-use crate::infra::repositories::Git2Repository;
+use crate::infra::repositories::GitRepositoryImpl;
 use crate::service::use_cases::{CompareCommitsUseCase, CompareFilesUseCase};
 
 #[derive(Debug, thiserror::Error)]
@@ -16,12 +16,12 @@ pub enum CommandError {
 }
 
 pub struct CommandController {
-    git_repository: Git2Repository,
+    git_repository: GitRepositoryImpl,
 }
 
 impl CommandController {
     pub fn new() -> Result<Self, CommandError> {
-        let git_repository = Git2Repository::open_current_dir()?;
+        let git_repository = GitRepositoryImpl::open_current_dir()?;
         Ok(Self { git_repository })
     }
 
