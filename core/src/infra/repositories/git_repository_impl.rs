@@ -174,11 +174,12 @@ impl GitRepositoryImpl {
                 message: format!("Failed to get commit OID: {}", e),
             })?;
 
-            let commit = self.repo.find_commit(oid).map_err(|e| {
-                GitRepositoryError::GitOperationFailed {
-                    message: format!("Failed to find commit: {}", e),
-                }
-            })?;
+            let commit =
+                self.repo
+                    .find_commit(oid)
+                    .map_err(|e| GitRepositoryError::GitOperationFailed {
+                        message: format!("Failed to find commit: {}", e),
+                    })?;
             let author = commit.author();
 
             let hash = CommitHash::new(oid.to_string()).map_err(|e| {
@@ -187,21 +188,24 @@ impl GitRepositoryImpl {
                 }
             })?;
 
-            let author_name = author.name().ok_or_else(|| {
-                GitRepositoryError::GitOperationFailed {
-                    message: format!("Missing author name for commit {}", oid),
-                }
-            })?;
-            let author_email = author.email().ok_or_else(|| {
-                GitRepositoryError::GitOperationFailed {
-                    message: format!("Missing author email for commit {}", oid),
-                }
-            })?;
-            let commit_message = commit.summary().ok_or_else(|| {
-                GitRepositoryError::GitOperationFailed {
-                    message: format!("Missing commit message for commit {}", oid),
-                }
-            })?;
+            let author_name =
+                author
+                    .name()
+                    .ok_or_else(|| GitRepositoryError::GitOperationFailed {
+                        message: format!("Missing author name for commit {}", oid),
+                    })?;
+            let author_email =
+                author
+                    .email()
+                    .ok_or_else(|| GitRepositoryError::GitOperationFailed {
+                        message: format!("Missing author email for commit {}", oid),
+                    })?;
+            let commit_message =
+                commit
+                    .summary()
+                    .ok_or_else(|| GitRepositoryError::GitOperationFailed {
+                        message: format!("Missing commit message for commit {}", oid),
+                    })?;
 
             let domain_commit = Commit::new(
                 hash,

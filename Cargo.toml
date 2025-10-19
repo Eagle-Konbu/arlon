@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "arlon-core",
-    "arlon-cli"
+    "core",
+    "cli"
 ]
 resolver = "2"

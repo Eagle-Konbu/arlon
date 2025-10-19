@@ -68,14 +68,20 @@ mod tests {
     fn test_invalid_length_commit_hash() {
         let result = CommitHash::new("short".to_string());
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), CommitHashError::InvalidFormat(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            CommitHashError::InvalidFormat(_)
+        ));
     }
 
     #[test]
     fn test_invalid_characters_commit_hash() {
         let result = CommitHash::new("ghijklmnopqrstuvwxyzghijklmnopqrstuvwxy".to_string());
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), CommitHashError::InvalidFormat(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            CommitHashError::InvalidFormat(_)
+        ));
     }
 
     #[test]

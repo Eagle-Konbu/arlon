@@ -31,7 +31,7 @@ mod tests {
     fn test_file_dto_from_file_change() {
         let file_change = create_test_file_change();
         let dto = FileDto::from(file_change);
-        
+
         assert_eq!(dto.path, "src/main.rs");
         assert_eq!(dto.status, "modified");
     }
@@ -42,7 +42,7 @@ mod tests {
             path: "src/main.rs".to_string(),
             status: "modified".to_string(),
         };
-        
+
         let json = serde_json::to_string(&dto).unwrap();
         assert!(json.contains("src/main.rs"));
         assert!(json.contains("modified"));
@@ -60,7 +60,7 @@ mod tests {
             let file_path = FilePath::new("test.txt".to_string()).unwrap();
             let file_change = FileChange::new(file_path, status);
             let dto = FileDto::from(file_change);
-            
+
             assert_eq!(dto.status, expected_str);
             assert_eq!(dto.path, "test.txt");
         }

@@ -1,5 +1,5 @@
-use cli::{Args, CommandController};
 use clap::Parser;
+use cli::{Args, CommandController};
 use std::process;
 
 mod cli;

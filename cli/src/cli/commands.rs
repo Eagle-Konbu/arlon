@@ -1,9 +1,9 @@
 use crate::cli::{Commands, OutputFormat};
-use arlon_core::{
-    GitRepository, GitRepositoryImpl, JsonFormatter, OutputFormatter, SimpleFormatter,
-    CompareCommitsUseCase, CompareFilesUseCase
-};
 use arlon_core::application::use_cases::{compare_commits, compare_files};
+use arlon_core::{
+    CompareCommitsUseCase, CompareFilesUseCase, GitRepository, GitRepositoryImpl, JsonFormatter,
+    OutputFormatter, SimpleFormatter,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum CommandError {
@@ -92,5 +92,3 @@ impl CommandController<GitRepositoryImpl> {
         Ok(Self::new(git_repository))
     }
 }
-
-

@@ -1,6 +1,6 @@
+use crate::application::dto::FileDto;
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
 use crate::domain::value_objects::{BranchName, BranchNameError};
-use crate::application::dto::FileDto;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CompareFilesError {
@@ -61,15 +61,15 @@ mod tests {
         let mut mock_repo = MockTestGitRepository::new();
         let test_file_change = create_test_file_change();
         let expected_changes = vec![test_file_change];
-        
+
         mock_repo
             .expect_get_file_changes_between_branches()
             .times(1)
             .returning(move |_| Ok(expected_changes.clone()));
-        
+
         let use_case = CompareFilesUseCase::new(&mock_repo);
         let result = use_case.execute("main".to_string());
-        
+
         assert!(result.is_ok());
         let files = result.unwrap();
         assert_eq!(files.len(), 1);
@@ -81,9 +81,9 @@ mod tests {
     fn test_execute_invalid_branch_name() {
         let mock_repo = MockTestGitRepository::new();
         let use_case = CompareFilesUseCase::new(&mock_repo);
-        
+
         let result = use_case.execute("".to_string()); // Invalid empty branch name
-        
+
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -94,16 +94,18 @@ mod tests {
     #[test]
     fn test_execute_repository_error() {
         let mut mock_repo = MockTestGitRepository::new();
-        
+
         mock_repo
             .expect_get_file_changes_between_branches()
-            .returning(|_| Err(GitRepositoryError::BranchNotFound {
-                branch: "nonexistent".to_string(),
-            }));
-        
+            .returning(|_| {
+                Err(GitRepositoryError::BranchNotFound {
+                    branch: "nonexistent".to_string(),
+                })
+            });
+
         let use_case = CompareFilesUseCase::new(&mock_repo);
         let result = use_case.execute("nonexistent".to_string());
-        
+
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -114,14 +116,14 @@ mod tests {
     #[test]
     fn test_execute_empty_files() {
         let mut mock_repo = MockTestGitRepository::new();
-        
+
         mock_repo
             .expect_get_file_changes_between_branches()
             .returning(|_| Ok(vec![]));
-        
+
         let use_case = CompareFilesUseCase::new(&mock_repo);
         let result = use_case.execute("main".to_string());
-        
+
         assert!(result.is_ok());
         let files = result.unwrap();
         assert_eq!(files.len(), 0);

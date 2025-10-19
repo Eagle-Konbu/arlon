@@ -1,0 +1,85 @@
+version: '3'
+
+vars:
+  PACKAGE_NAME: arlon-cli
+  BINARY_NAME: arlon
+
+tasks:
+  # ========================================
+  # CLI Application Specific Tasks
+  # ========================================
+
+  build:
+    desc: Build the CLI application
+    cmds:
+      - cargo build
+
+  build:release:
+    desc: Build the CLI application in release mode
+    cmds:
+      - cargo build --release
+
+  run:
+    desc: Run the CLI application with arguments
+    cmds:
+      - cargo run -- {{.CLI_ARGS}}
+
+  run:help:
+    desc: Show CLI help
+    cmds:
+      - cargo run -- --help
+
+  run:commits:
+    desc: Run commits command example
+    cmds:
+      - cargo run -- commits main || true
+
+  run:files:
+    desc: Run files command example
+    cmds:
+      - cargo run -- files main || true
+
+  test:
+    desc: Run tests for CLI application
+    cmds:
+      - cargo test
+
+  check:
+    desc: Check for compilation errors
+    cmds:
+      - cargo check
+
+  clippy:
+    desc: Run clippy linter
+    cmds:
+      - cargo clippy -- -D warnings
+
+  fmt:
+    desc: Format code
+    cmds:
+      - cargo fmt
+
+  fmt:check:
+    desc: Check formatting
+    cmds:
+      - cargo fmt --check
+
+  doc:
+    desc: Generate documentation
+    cmds:
+      - cargo doc --no-deps
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - cargo clean
+
+  install:
+    desc: Install binary locally
+    cmds:
+      - cargo install --path . --force
+
+  publish:dry:
+    desc: Dry-run publish to crates.io
+    cmds:
+      - cargo publish --dry-run

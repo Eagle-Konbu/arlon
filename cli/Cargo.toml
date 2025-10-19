@@ -10,6 +10,6 @@ name = "arlon"
 path = "src/main.rs"
 
 [dependencies]
-arlon-core = { path = "../arlon-core" }
+arlon-core = { path = "../core" }
 clap = { version = "4.5", features = ["derive"] }
 thiserror = "1.0"

@@ -9,10 +9,8 @@ impl CommitComparisonDomainService {
         head_commits: Vec<Commit>,
         branch_commits: Vec<Commit>,
     ) -> Vec<Commit> {
-        let branch_commit_hashes: HashSet<&CommitHash> = branch_commits
-            .iter()
-            .map(|commit| commit.hash())
-            .collect();
+        let branch_commit_hashes: HashSet<&CommitHash> =
+            branch_commits.iter().map(|commit| commit.hash()).collect();
 
         head_commits
             .into_iter()
@@ -54,13 +52,14 @@ mod tests {
         let head_commits = vec![commit1.clone(), commit2.clone(), commit3.clone()];
         let branch_commits = vec![commit1, commit2];
 
-        let result = CommitComparisonDomainService::commits_not_in_branch(
-            head_commits,
-            branch_commits,
-        );
+        let result =
+            CommitComparisonDomainService::commits_not_in_branch(head_commits, branch_commits);
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].hash().as_str(), "fedcba0987654321fedcba0987654321fedcba09");
+        assert_eq!(
+            result[0].hash().as_str(),
+            "fedcba0987654321fedcba0987654321fedcba09"
+        );
     }
 
     #[test]
@@ -76,10 +75,8 @@ mod tests {
         let head_commits = vec![commit1.clone()];
         let branch_commits = vec![commit1];
 
-        let result = CommitComparisonDomainService::commits_not_in_branch(
-            head_commits,
-            branch_commits,
-        );
+        let result =
+            CommitComparisonDomainService::commits_not_in_branch(head_commits, branch_commits);
 
         assert_eq!(result.len(), 0);
     }
@@ -97,12 +94,13 @@ mod tests {
         let head_commits = vec![commit1.clone()];
         let branch_commits = vec![];
 
-        let result = CommitComparisonDomainService::commits_not_in_branch(
-            head_commits,
-            branch_commits,
-        );
+        let result =
+            CommitComparisonDomainService::commits_not_in_branch(head_commits, branch_commits);
 
         assert_eq!(result.len(), 1);
-        assert_eq!(result[0].hash().as_str(), "abcdef1234567890abcdef1234567890abcdef12");
+        assert_eq!(
+            result[0].hash().as_str(),
+            "abcdef1234567890abcdef1234567890abcdef12"
+        );
     }
 }

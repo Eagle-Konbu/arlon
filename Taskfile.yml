@@ -2,65 +2,369 @@ version: '3'
 
 vars:
   PROJECT_NAME: arlon
-  BINARY_NAME: arlon
+  CLI_BINARY_NAME: arlon
+  CORE_LIB_NAME: arlon-core
+  CLI_PACKAGE: arlon-cli
+  CORE_PACKAGE: arlon-core
+  CLI_DIR: cli
+  CORE_DIR: core
   TARGET_DIR: target
   RELEASE_DIR: "{{.TARGET_DIR}}/release"
   DEBUG_DIR: "{{.TARGET_DIR}}/debug"
 
+# Global environment variables
+env:
+  RUST_BACKTRACE: 1
+
+# Include files for modular task organization
+includes:
+  core:
+    taskfile: ./{{.CORE_DIR}}/Taskfile.yml
+    dir: ./{{.CORE_DIR}}
+    optional: true
+  cli:
+    taskfile: ./{{.CLI_DIR}}/Taskfile.yml
+    dir: ./{{.CLI_DIR}}
+    optional: true
+
 tasks:
-  build:
-    desc: Build the project in debug mode
+  default:
+    desc: Show available tasks
     cmds:
-      - cargo build
+      - task --list
+
+  # ========================================
+  # Development Tasks
+  # ========================================
+  
+  dev:
+    desc: Full development workflow (format, check, test, build)
+    deps:
+      - fmt
+      - check
+      - test
+      - build
+
+  dev:watch:
+    desc: Watch for changes and run development workflow
+    deps: [install:cargo-watch]
+    cmds:
+      - cargo watch -x fmt -x check -x test -x build
+
+  # ========================================
+  # Build Tasks
+  # ========================================
+
+  build:
+    desc: Build all packages in debug mode
+    cmds:
+      - cargo build --workspace
     sources:
-      - src/**/*.rs
-      - Cargo.toml
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "*/Cargo.toml"
       - Cargo.lock
     generates:
-      - "{{.DEBUG_DIR}}/{{.BINARY_NAME}}"
+      - "{{.DEBUG_DIR}}/{{.CLI_BINARY_NAME}}"
+
+  build:core:
+    desc: Build only the core library
+    cmds:
+      - cargo build -p {{.CORE_PACKAGE}}
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/Cargo.toml"
+      - Cargo.lock
+
+  build:cli:
+    desc: Build only the CLI application
+    deps: [build:core]
+    cmds:
+      - cargo build -p {{.CLI_PACKAGE}}
+    sources:
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.DEBUG_DIR}}/{{.CLI_BINARY_NAME}}"
 
   build:release:
-    desc: Build the project in release mode (optimized)
+    desc: Build all packages in release mode (optimized)
     cmds:
-      - cargo build --release
+      - cargo build --workspace --release
     sources:
-      - src/**/*.rs
-      - Cargo.toml
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "*/Cargo.toml"
       - Cargo.lock
     generates:
-      - "{{.RELEASE_DIR}}/{{.BINARY_NAME}}"
+      - "{{.RELEASE_DIR}}/{{.CLI_BINARY_NAME}}"
+
+  build:release:core:
+    desc: Build core library in release mode
+    cmds:
+      - cargo build -p {{.CORE_PACKAGE}} --release
+    sources:
+      - "{{.CORE_DIR}}/src/**/*.rs"
+      - "{{.CORE_DIR}}/Cargo.toml"
+      - Cargo.lock
+
+  build:release:cli:
+    desc: Build CLI application in release mode
+    deps: [build:release:core]
+    cmds:
+      - cargo build -p {{.CLI_PACKAGE}} --release
+    sources:
+      - "{{.CLI_DIR}}/src/**/*.rs"
+      - "{{.CLI_DIR}}/Cargo.toml"
+      - Cargo.lock
+    generates:
+      - "{{.RELEASE_DIR}}/{{.CLI_BINARY_NAME}}"
+
+  # ========================================
+  # Test Tasks
+  # ========================================
 
   test:
-    desc: Run all tests
+    desc: Run all tests (unit + integration) for all packages
     cmds:
-      - cargo test
+      - cargo test --workspace
+    deps: [build:core]
+
+  test:core:
+    desc: Run tests for core library only
+    cmds:
+      - cargo test -p {{.CORE_PACKAGE}}
+
+  test:cli:
+    desc: Run tests for CLI package only
+    deps: [build:core]
+    cmds:
+      - cargo test -p {{.CLI_PACKAGE}}
+
+  test:unit:
+    desc: Run only unit tests
+    cmds:
+      - cargo test --workspace --lib
+
+  test:integration:
+    desc: Run only integration tests
+    cmds:
+      - cargo test --workspace --test '*'
+
+  test:doc:
+    desc: Run documentation tests
+    cmds:
+      - cargo test --workspace --doc
+
+  test:coverage:
+    desc: Run tests with coverage report
+    deps: [install:tarpaulin]
+    cmds:
+      - cargo tarpaulin --workspace --out Html --output-dir coverage
+
+  # ========================================
+  # Quality Assurance Tasks
+  # ========================================
 
   check:
-    desc: Check the project for errors without building
+    desc: Check all packages for errors without building
     cmds:
-      - cargo check
+      - cargo check --workspace
+
+  check:core:
+    desc: Check core library for errors
+    cmds:
+      - cargo check -p {{.CORE_PACKAGE}}
+
+  check:cli:
+    desc: Check CLI package for errors
+    cmds:
+      - cargo check -p {{.CLI_PACKAGE}}
 
   clippy:
-    desc: Run clippy (Rust linter)
+    desc: Run clippy (Rust linter) on all packages
     cmds:
-      - cargo clippy -- -D warnings
+      - cargo clippy --workspace -- -D warnings
+
+  clippy:core:
+    desc: Run clippy on core library
+    cmds:
+      - cargo clippy -p {{.CORE_PACKAGE}} -- -D warnings
+
+  clippy:cli:
+    desc: Run clippy on CLI package
+    cmds:
+      - cargo clippy -p {{.CLI_PACKAGE}} -- -D warnings
+
+  clippy:fix:
+    desc: Auto-fix clippy warnings where possible
+    cmds:
+      - cargo clippy --workspace --fix --allow-dirty
 
   fmt:
-    desc: Format the code using rustfmt
+    desc: Format all code using rustfmt
     cmds:
-      - cargo fmt
+      - cargo fmt --all
 
   fmt:check:
-    desc: Check if the code is formatted correctly
+    desc: Check if all code is formatted correctly
     cmds:
-      - cargo fmt --check
+      - cargo fmt --all --check
+
+  audit:
+    desc: Audit dependencies for security vulnerabilities
+    deps: [install:audit]
+    cmds:
+      - cargo audit
+
+  # ========================================
+  # Utility Tasks
+  # ========================================
 
   clean:
-    desc: Remove build artifacts
+    desc: Remove all build artifacts
     cmds:
       - cargo clean
 
-  install:
-    desc: Install the binary locally
+  clean:target:
+    desc: Remove target directory
     cmds:
-      - cargo install --path .
+      - rm -rf {{.TARGET_DIR}}
+
+  deps:
+    desc: Show dependency tree
+    cmds:
+      - cargo tree --workspace
+
+  deps:outdated:
+    desc: Check for outdated dependencies
+    deps: [install:outdated]
+    cmds:
+      - cargo outdated --workspace
+
+  deps:update:
+    desc: Update dependencies
+    cmds:
+      - cargo update
+
+  # ========================================
+  # Installation Tasks
+  # ========================================
+
+  install:
+    desc: Install the CLI binary locally
+    deps: [build:release:cli]
+    cmds:
+      - cargo install --path {{.CLI_DIR}} --force
+
+  install:cargo-watch:
+    desc: Install cargo-watch for file watching
+    cmds:
+      - cargo install cargo-watch
+    status:
+      - command -v cargo-watch
+
+  install:tarpaulin:
+    desc: Install cargo-tarpaulin for coverage
+    cmds:
+      - cargo install cargo-tarpaulin
+    status:
+      - command -v cargo-tarpaulin
+
+  install:audit:
+    desc: Install cargo-audit for security auditing
+    cmds:
+      - cargo install cargo-audit
+    status:
+      - command -v cargo-audit
+
+  install:outdated:
+    desc: Install cargo-outdated for dependency checking
+    cmds:
+      - cargo install cargo-outdated
+    status:
+      - command -v cargo-outdated
+
+  # ========================================
+  # Documentation Tasks
+  # ========================================
+
+  doc:
+    desc: Generate documentation for all packages
+    cmds:
+      - cargo doc --workspace --no-deps
+
+  doc:open:
+    desc: Generate and open documentation
+    cmds:
+      - cargo doc --workspace --no-deps --open
+
+  doc:core:
+    desc: Generate documentation for core library
+    cmds:
+      - cargo doc -p {{.CORE_PACKAGE}} --no-deps
+
+  doc:cli:
+    desc: Generate documentation for CLI package
+    cmds:
+      - cargo doc -p {{.CLI_PACKAGE}} --no-deps
+
+  # ========================================
+  # Release Tasks
+  # ========================================
+
+  release:prepare:
+    desc: Prepare for release (format, check, test, build)
+    deps:
+      - fmt
+      - clippy
+      - test
+      - build:release
+      - doc
+
+  release:check:
+    desc: Dry-run release check
+    cmds:
+      - cargo publish --dry-run -p {{.CORE_PACKAGE}}
+      - cargo publish --dry-run -p {{.CLI_PACKAGE}}
+
+  # ========================================
+  # Benchmark Tasks
+  # ========================================
+
+  bench:
+    desc: Run benchmarks
+    cmds:
+      - cargo bench --workspace
+
+  bench:core:
+    desc: Run benchmarks for core library
+    cmds:
+      - cargo bench -p {{.CORE_PACKAGE}}
+
+  # ========================================
+  # Example Tasks
+  # ========================================
+
+  example:
+    desc: Run CLI with example commands
+    deps: [build:cli]
+    cmds:
+      - echo "Running example commands..."
+      - ./{{.DEBUG_DIR}}/{{.CLI_BINARY_NAME}} --help
+      - task example:commits
+
+  example:commits:
+    desc: Example commit comparison
+    deps: [build:cli]
+    cmds:
+      - 'echo "Example: Comparing commits with main branch"'
+      - './{{.DEBUG_DIR}}/{{.CLI_BINARY_NAME}} commits main || true'
+
+  example:files:
+    desc: Example file comparison
+    deps: [build:cli]
+    cmds:
+      - 'echo "Example: Comparing files with main branch"'
+      - './{{.DEBUG_DIR}}/{{.CLI_BINARY_NAME}} files main || true'

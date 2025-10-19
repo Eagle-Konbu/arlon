@@ -42,7 +42,7 @@ mod tests {
     fn test_commit_dto_from_commit() {
         let commit = create_test_commit();
         let dto = CommitDto::from(commit);
-        
+
         assert_eq!(dto.hash, "abcdef1234567890abcdef1234567890abcdef12");
         assert_eq!(dto.author, "Test Author");
         assert_eq!(dto.email, "test@example.com");
@@ -59,7 +59,7 @@ mod tests {
             date: "2021-10-18 12:31:30".to_string(),
             message: "Test commit message".to_string(),
         };
-        
+
         let json = serde_json::to_string(&dto).unwrap();
         assert!(json.contains("abcdef12"));
         assert!(json.contains("Test Author"));

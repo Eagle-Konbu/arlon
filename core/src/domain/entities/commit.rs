@@ -48,8 +48,7 @@ impl Commit {
     }
 
     pub fn formatted_date(&self) -> String {
-        let datetime = DateTime::from_timestamp(self.timestamp, 0)
-            .unwrap_or_default();
+        let datetime = DateTime::from_timestamp(self.timestamp, 0).unwrap_or_default();
         datetime.format("%Y-%m-%d %H:%M:%S").to_string()
     }
 }
@@ -81,7 +80,10 @@ mod tests {
     #[test]
     fn test_commit_hash() {
         let commit = create_test_commit();
-        assert_eq!(commit.hash().as_str(), "abcdef1234567890abcdef1234567890abcdef12");
+        assert_eq!(
+            commit.hash().as_str(),
+            "abcdef1234567890abcdef1234567890abcdef12"
+        );
     }
 
     #[test]

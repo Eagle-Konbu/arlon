@@ -1,5 +1,5 @@
-use crate::infra::output::OutputFormatter;
 use crate::application::dto::{CommitDto, FileDto};
+use crate::infra::output::OutputFormatter;
 
 pub struct JsonFormatter;
 
@@ -27,16 +27,14 @@ mod tests {
     #[test]
     fn test_format_commits() {
         let formatter = JsonFormatter;
-        let commits = vec![
-            CommitDto {
-                hash: "abcdef12".to_string(),
-                author: "Test Author".to_string(),
-                email: "test@example.com".to_string(),
-                date: "2021-10-18 12:31:30".to_string(),
-                message: "Test commit message".to_string(),
-            },
-        ];
-        
+        let commits = vec![CommitDto {
+            hash: "abcdef12".to_string(),
+            author: "Test Author".to_string(),
+            email: "test@example.com".to_string(),
+            date: "2021-10-18 12:31:30".to_string(),
+            message: "Test commit message".to_string(),
+        }];
+
         let result = formatter.format_commits(&commits);
         assert!(result.is_ok());
     }
@@ -44,13 +42,11 @@ mod tests {
     #[test]
     fn test_format_files() {
         let formatter = JsonFormatter;
-        let files = vec![
-            FileDto {
-                path: "src/main.rs".to_string(),
-                status: "modified".to_string(),
-            },
-        ];
-        
+        let files = vec![FileDto {
+            path: "src/main.rs".to_string(),
+            status: "modified".to_string(),
+        }];
+
         let result = formatter.format_files(&files);
         assert!(result.is_ok());
     }

@@ -70,21 +70,30 @@ mod tests {
     fn test_branch_name_with_double_dot() {
         let result = BranchName::new("feature..bad".to_string());
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), BranchNameError::InvalidCharacters(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            BranchNameError::InvalidCharacters(_)
+        ));
     }
 
     #[test]
     fn test_branch_name_starting_with_dot() {
         let result = BranchName::new(".hidden".to_string());
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), BranchNameError::InvalidCharacters(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            BranchNameError::InvalidCharacters(_)
+        ));
     }
 
     #[test]
     fn test_branch_name_ending_with_dot() {
         let result = BranchName::new("feature.".to_string());
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), BranchNameError::InvalidCharacters(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            BranchNameError::InvalidCharacters(_)
+        ));
     }
 
     #[test]

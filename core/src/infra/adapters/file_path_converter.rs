@@ -13,7 +13,9 @@ impl FilePathConverter {
         path_buf.to_string_lossy().to_string()
     }
 
-    pub fn from_path_buf(path_buf: &std::path::Path) -> Result<FilePath, crate::domain::value_objects::FilePathError> {
+    pub fn from_path_buf(
+        path_buf: &std::path::Path,
+    ) -> Result<FilePath, crate::domain::value_objects::FilePathError> {
         let path_str = path_buf.to_string_lossy().to_string();
         FilePath::new(path_str)
     }

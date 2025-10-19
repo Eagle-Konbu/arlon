@@ -1,7 +1,7 @@
+use crate::application::dto::CommitDto;
 use crate::domain::repositories::{GitRepository, GitRepositoryError};
 use crate::domain::services::CommitComparisonDomainService;
 use crate::domain::value_objects::{BranchName, BranchNameError};
-use crate::application::dto::CommitDto;
 
 #[derive(Debug, thiserror::Error)]
 pub enum CompareCommitsError {
@@ -17,21 +17,17 @@ pub struct CompareCommitsUseCase<'a, R> {
 
 impl<'a, R: GitRepository> CompareCommitsUseCase<'a, R> {
     pub fn new(git_repository: &'a R) -> Self {
-        Self { 
-            git_repository,
-        }
+        Self { git_repository }
     }
 
     pub fn execute(&self, branch_name: String) -> Result<Vec<CommitDto>, CompareCommitsError> {
         let branch = BranchName::new(branch_name)?;
-        
+
         let head_commits = self.git_repository.get_commits_from_head()?;
         let branch_commits = self.git_repository.get_commits_from_branch(&branch)?;
-        
-        let commits = CommitComparisonDomainService::commits_not_in_branch(
-            head_commits,
-            branch_commits,
-        );
+
+        let commits =
+            CommitComparisonDomainService::commits_not_in_branch(head_commits, branch_commits);
 
         Ok(commits.into_iter().map(CommitDto::from).collect())
     }
@@ -43,8 +39,8 @@ mod tests {
     use crate::domain::entities::Commit;
     use crate::domain::repositories::{GitRepository, GitRepositoryError};
     use crate::domain::value_objects::{BranchName, CommitHash};
-    use mockall::predicate::*;
     use mockall::mock;
+    use mockall::predicate::*;
 
     mock! {
         TestGitRepository {}
@@ -77,20 +73,20 @@ mod tests {
         let test_commit = create_test_commit();
         let head_commits = vec![test_commit.clone()];
         let branch_commits = vec![];
-        
+
         mock_repo
             .expect_get_commits_from_head()
             .times(1)
             .returning(move || Ok(head_commits.clone()));
-        
+
         mock_repo
             .expect_get_commits_from_branch()
             .times(1)
             .returning(move |_| Ok(branch_commits.clone()));
-        
+
         let use_case = CompareCommitsUseCase::new(&mock_repo);
         let result = use_case.execute("main".to_string());
-        
+
         assert!(result.is_ok());
         let commits = result.unwrap();
         assert_eq!(commits.len(), 1);
@@ -103,9 +99,9 @@ mod tests {
     fn test_execute_invalid_branch_name() {
         let mock_repo = MockTestGitRepository::new();
         let use_case = CompareCommitsUseCase::new(&mock_repo);
-        
+
         let result = use_case.execute("".to_string()); // Invalid empty branch name
-        
+
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -116,16 +112,16 @@ mod tests {
     #[test]
     fn test_execute_repository_error() {
         let mut mock_repo = MockTestGitRepository::new();
-        
-        mock_repo
-            .expect_get_commits_from_head()
-            .returning(|| Err(GitRepositoryError::BranchNotFound {
+
+        mock_repo.expect_get_commits_from_head().returning(|| {
+            Err(GitRepositoryError::BranchNotFound {
                 branch: "nonexistent".to_string(),
-            }));
-        
+            })
+        });
+
         let use_case = CompareCommitsUseCase::new(&mock_repo);
         let result = use_case.execute("nonexistent".to_string());
-        
+
         assert!(result.is_err());
         assert!(matches!(
             result.unwrap_err(),
@@ -136,18 +132,18 @@ mod tests {
     #[test]
     fn test_execute_empty_commits() {
         let mut mock_repo = MockTestGitRepository::new();
-        
+
         mock_repo
             .expect_get_commits_from_head()
             .returning(|| Ok(vec![]));
-        
+
         mock_repo
             .expect_get_commits_from_branch()
             .returning(|_| Ok(vec![]));
-        
+
         let use_case = CompareCommitsUseCase::new(&mock_repo);
         let result = use_case.execute("main".to_string());
-        
+
         assert!(result.is_ok());
         let commits = result.unwrap();
         assert_eq!(commits.len(), 0);
